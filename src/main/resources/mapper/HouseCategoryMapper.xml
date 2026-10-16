@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.code.web_homework.mapper.HouseCategoryMapper">
+
+    <resultMap id="BaseResultMap" type="HouseCategory">
+        <id     column="id"             property="id"/>
+        <result column="category_name"  property="categoryName"/>
+        <result column="category_notes" property="categoryNotes"/>
+        <result column="icon"           property="icon"/>
+        <result column="sort"           property="sort"/>
+        <result column="status"         property="status"/>
+        <result column="created_by"     property="createdBy"/>
+        <result column="creation_date"  property="creationDate"/>
+        <result column="modify_by"      property="modifyBy"/>
+        <result column="modify_date"    property="modifyDate"/>
+        <result column="house_count"    property="houseCount"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, category_name, category_notes, icon, sort, status,
+        created_by, creation_date, modify_by, modify_date
+    </sql>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM house_category
+        WHERE status = 1
+        ORDER BY sort ASC
+    </select>
+
+    <!-- 左连接统计每个分类下的已上架房源数量 -->
+    <select id="selectWithHouseCount" resultMap="BaseResultMap">
+        SELECT c.id, c.category_name, c.category_notes, c.icon, c.sort, c.status,
+               c.created_by, c.creation_date, c.modify_by, c.modify_date,
+               COUNT(h.id) AS house_count
+        FROM house_category c
+        LEFT JOIN house h ON c.id = h.category_id AND h.status = 1
+        GROUP BY c.id, c.category_name, c.category_notes, c.icon, c.sort, c.status,
+                 c.created_by, c.creation_date, c.modify_by, c.modify_date
+        ORDER BY c.sort ASC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM house_category
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="HouseCategory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO house_category
+            (category_name, category_notes, icon, sort, status, created_by, creation_date)
+        VALUES
+            (#{categoryName}, #{categoryNotes}, #{icon}, #{sort}, #{status}, #{createdBy}, NOW())
+    </insert>
+
+    <update id="update" parameterType="HouseCategory">
+        UPDATE house_category
+        <set>
+            <if test="categoryName != null">category_name = #{categoryName},</if>
+            <if test="categoryNotes != null">category_notes = #{categoryNotes},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="status != null">status = #{status},</if>
+            modify_by = #{modifyBy},
+            modify_date = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM house_category WHERE id = #{id}
+    </delete>
+
+</mapper>

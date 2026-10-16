@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('数据统计')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('stat')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('数据统计')}"></div>
+
+    <div class="admin-content">
+
+        <!-- 概览指标 -->
+        <div class="dash-grid">
+            <div class="dash-card">
+                <div class="dash-label">累计成交金额</div>
+                <div class="dash-value"><small>¥</small><span th:text="${overview.totalAmount}">0</span></div>
+                <div class="dash-trend">本月 ¥<span th:text="${overview.monthAmount}">0</span></div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-label">订单总数</div>
+                <div class="dash-value" th:text="${overview.totalOrders}">0</div>
+                <div class="dash-trend">本月新增 <span th:text="${overview.monthOrders}">0</span> 单</div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-label">房源总数</div>
+                <div class="dash-value" th:text="${overview.totalHouses}">0</div>
+                <div class="dash-trend">在营 <span th:text="${overview.onlineHouses}">0</span> 套</div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-label">评价 / 收藏</div>
+                <div class="dash-value" th:text="${overview.totalReviews}">0</div>
+                <div class="dash-trend">
+                    收藏 <span th:text="${overview.totalFavorites}">0</span> 次 ·
+                    均分 <span th:text="${overview.avgScore}">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-grid">
+            <!-- 营收趋势 -->
+            <div class="chart-box full">
+                <div class="chart-head">
+                    <div class="chart-title">
+                        <span th:text="${currentYear}">2026</span> 年度各月成交金额
+                    </div>
+                    <span style="color:#6b7280;font-size:13px">仅统计已支付及之后的订单</span>
+                </div>
+                <div class="chart-canvas-wrap tall">
+                    <canvas id="monthAmountChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 分类占比 -->
+            <div class="chart-box">
+                <div class="chart-head">
+                    <div class="chart-title">房源类型分布</div>
+                </div>
+                <div class="chart-canvas-wrap">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 城市分布 -->
+            <div class="chart-box">
+                <div class="chart-head">
+                    <div class="chart-title">城市房源数量 TOP 8</div>
+                </div>
+                <div class="chart-canvas-wrap">
+                    <canvas id="cityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 订单状态 -->
+            <div class="chart-box">
+                <div class="chart-head">
+                    <div class="chart-title">订单状态分布</div>
+                </div>
+                <div class="chart-canvas-wrap">
+                    <canvas id="orderStatusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 评分分布 -->
+            <div class="chart-box">
+                <div class="chart-head">
+                    <div class="chart-title">住客评分分布</div>
+                </div>
+                <div class="chart-canvas-wrap">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 房源排行 -->
+            <div class="chart-box full">
+                <div class="chart-head">
+                    <div class="chart-title">房源预订排行 TOP 8</div>
+                </div>
+                <div class="chart-canvas-wrap tall">
+                    <canvas id="topHouseChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/lib/chart.umd.js}"></script>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script th:inline="javascript">
+    /* 一次性拉取全部图表数据并分别渲染，减少请求次数 */
+    var currentYear = /*[[${currentYear}]]*/ 2026;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        Minsu.get('/admin/stat/data', {year: currentYear}, {silent: true}).then(function (result) {
+            var data = result.data;
+            Admin.renderLine('monthAmountChart', data.monthAmount);
+            Admin.renderDoughnut('categoryChart', data.category);
+            Admin.renderBar('cityChart', data.city, false);
+            Admin.renderDoughnut('orderStatusChart', data.orderStatus);
+            Admin.renderBar('scoreChart', data.score, false);
+            Admin.renderBar('topHouseChart', data.topHouse, true);
+        }).catch(function () {
+            Minsu.toast('统计数据加载失败，请刷新重试', 'error');
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('关于我们')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('about')}"></header>
+
+<main class="page-main">
+    <div class="container" style="max-width:980px">
+
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> / <span>关于我们</span>
+        </div>
+
+        <!-- 平台简介 -->
+        <div class="card">
+            <div class="card-body" style="padding:38px 42px">
+                <h1 style="font-size:26px;font-weight:700;margin-bottom:16px">关于云栖民宿</h1>
+                <p style="line-height:2.1;color:#374151;font-size:15px">
+                    云栖民宿预订管理系统是一个面向民宿行业的在线预订平台。平台一端连接着分布在全国各地的特色民宿房东，
+                    另一端连接着追求个性化住宿体验的旅行者，通过信息化的手段把「找房 — 预订 — 支付 — 入住 — 评价」
+                    这条完整的业务链路搬到线上。
+                </p>
+                <p style="line-height:2.1;color:#374151;font-size:15px;margin-top:14px">
+                    相比传统酒店预订，民宿的房源更加分散、房态更加灵活，因此平台在设计中重点解决了三个问题：
+                    一是房源信息的标准化录入与审核，保证上架房源的真实性；二是日期区间的占用校验，避免同一房源被重复预订；
+                    三是订单状态的清晰流转，让住客与房东都能随时掌握进度。
+                </p>
+            </div>
+        </div>
+
+        <!-- 平台数据 -->
+        <div class="stat-row" style="margin-top:20px">
+            <div class="stat-card">
+                <div class="stat-icon">🏠</div>
+                <div>
+                    <div class="stat-value" th:text="${overview.onlineHouses}">0</div>
+                    <div class="stat-label">在营房源</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue">👥</div>
+                <div>
+                    <div class="stat-value" th:text="${overview.totalUsers}">0</div>
+                    <div class="stat-label">注册用户</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange">📋</div>
+                <div>
+                    <div class="stat-value" th:text="${overview.totalOrders}">0</div>
+                    <div class="stat-label">累计订单</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">⭐</div>
+                <div>
+                    <div class="stat-value" th:text="${overview.avgScore}">0</div>
+                    <div class="stat-label">平均评分</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 核心功能 -->
+        <div class="card" style="margin-top:20px">
+            <div class="card-header">
+                <div class="card-title">平台核心功能</div>
+            </div>
+            <div class="card-body">
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px">
+                    <div>
+                        <div style="font-weight:600;margin-bottom:7px">🔍 房源检索</div>
+                        <div style="color:#6b7280;font-size:13px;line-height:1.9">
+                            支持按关键词、房源类型、价格区间、入住人数多条件组合筛选，
+                            并提供按价格、评分、热度等多种排序方式。
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:7px">📅 房态校验</div>
+                        <div style="color:#6b7280;font-size:13px;line-height:1.9">
+                            下单前自动校验所选日期区间是否与该房源已有订单重叠，
+                            从源头避免一房多订。
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:7px">💳 在线支付</div>
+                        <div style="color:#6b7280;font-size:13px;line-height:1.9">
+                            支持余额、支付宝、微信三种支付方式，
+                            订单取消时已支付款项自动退回账户余额。
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:7px">📊 数据统计</div>
+                        <div style="color:#6b7280;font-size:13px;line-height:1.9">
+                            后台提供营收趋势、房源分布、订单状态、房源排行等多维度
+                            可视化统计，辅助运营决策。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技术架构 -->
+        <div class="card" style="margin-top:20px">
+            <div class="card-header">
+                <div class="card-title">技术架构</div>
+            </div>
+            <div class="card-body">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>层次</th>
+                        <th>技术选型</th>
+                        <th>说明</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>开发语言</td>
+                        <td>Java 17</td>
+                        <td>面向对象编程语言，跨平台运行</td>
+                    </tr>
+                    <tr>
+                        <td>Web 框架</td>
+                        <td>Spring Boot 4 + Spring MVC</td>
+                        <td>基于 MVC 模式组织请求分发与视图渲染</td>
+                    </tr>
+                    <tr>
+                        <td>视图技术</td>
+                        <td>Thymeleaf 3</td>
+                        <td>服务端模板引擎，页面与数据在服务端合成</td>
+                    </tr>
+                    <tr>
+                        <td>持久层</td>
+                        <td>MyBatis 3</td>
+                        <td>XML 映射 + 动态 SQL，SQL 可控可优化</td>
+                    </tr>
+                    <tr>
+                        <td>数据库</td>
+                        <td>MySQL 8</td>
+                        <td>关系型数据库，InnoDB 引擎支持事务</td>
+                    </tr>
+                    <tr>
+                        <td>前端</td>
+                        <td>HTML5 + CSS3 + 原生 JavaScript</td>
+                        <td>响应式布局，AJAX 异步交互，Chart.js 图表</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 联系方式 -->
+        <div class="card" style="margin-top:20px">
+            <div class="card-header">
+                <div class="card-title">联系我们</div>
+            </div>
+            <div class="card-body" style="line-height:2.2;color:#4b5563">
+                <div>客服电话：400-888-0000（09:00 - 21:00）</div>
+                <div>客服邮箱：service@minsu.com</div>
+                <div>办公地址：计算机科学与工程学院</div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>

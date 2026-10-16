@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.code.web_homework.mapper.NoticeMapper">
+
+    <resultMap id="BaseResultMap" type="Notice">
+        <id     column="id"            property="id"/>
+        <result column="title"         property="title"/>
+        <result column="content"       property="content"/>
+        <result column="type"          property="type"/>
+        <result column="publisher_id"  property="publisherId"/>
+        <result column="publish_time"  property="publishTime"/>
+        <result column="view_count"    property="viewCount"/>
+        <result column="status"        property="status"/>
+        <result column="created_by"    property="createdBy"/>
+        <result column="creation_date" property="creationDate"/>
+        <result column="modify_by"     property="modifyBy"/>
+        <result column="modify_date"   property="modifyDate"/>
+        <result column="publisher_name" property="publisherName"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        n.id, n.title, n.content, n.type, n.publisher_id, n.publish_time,
+        n.view_count, n.status, n.created_by, n.creation_date, n.modify_by, n.modify_date
+    </sql>
+
+    <!-- 首页公告：命中 idx_status_time 组合索引，按发布时间倒序取前 N 条 -->
+    <select id="selectPublished" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.real_name AS publisher_name
+        FROM notice n
+        LEFT JOIN sys_user u ON n.publisher_id = u.id
+        WHERE n.status = 1
+        ORDER BY n.publish_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.real_name AS publisher_name
+        FROM notice n
+        LEFT JOIN sys_user u ON n.publisher_id = u.id
+        ORDER BY n.publish_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.real_name AS publisher_name
+        FROM notice n
+        LEFT JOIN sys_user u ON n.publisher_id = u.id
+        WHERE n.id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="Notice" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notice
+            (title, content, type, publisher_id, publish_time, view_count, status, created_by, creation_date)
+        VALUES
+            (#{title}, #{content}, #{type}, #{publisherId}, NOW(), 0, #{status}, #{createdBy}, NOW())
+    </insert>
+
+    <update id="update" parameterType="Notice">
+        UPDATE notice
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="status != null">status = #{status},</if>
+            modify_by = #{modifyBy},
+            modify_date = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="increaseViewCount">
+        UPDATE notice SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM notice WHERE id = #{id}
+    </delete>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(1) FROM notice
+    </select>
+
+</mapper>

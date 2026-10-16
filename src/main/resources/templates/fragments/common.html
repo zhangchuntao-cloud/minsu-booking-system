@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+  公共片段文件
+  把页头、页脚、分页等重复出现的结构抽成 Thymeleaf 片段，
+  各页面通过 th:replace 引入，避免大量重复代码。
+-->
+<body>
+
+<!-- ==================== 页面 head 公共部分 ==================== -->
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 云栖民宿'">云栖民宿</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<!-- ==================== 顶部导航栏 ==================== -->
+<header th:fragment="header(active)" class="site-header">
+    <div class="container nav-bar">
+        <a href="/index" class="logo">
+            <span class="logo-icon">栖</span>
+            <span>云栖民宿</span>
+        </a>
+
+        <nav class="nav-menu">
+            <a href="/index" th:classappend="${active == 'index'} ? 'active'">首页</a>
+            <a href="/house/list" th:classappend="${active == 'house'} ? 'active'">找民宿</a>
+            <a href="/notice/list" th:classappend="${active == 'notice'} ? 'active'">平台公告</a>
+            <a href="/about" th:classappend="${active == 'about'} ? 'active'">关于我们</a>
+        </nav>
+
+        <div class="nav-user">
+            <!-- 已登录：显示头像、昵称与下拉入口 -->
+            <th:block th:if="${session.loginUser != null}">
+                <a th:href="@{/user/center}" class="nav-avatar"
+                   th:text="${#strings.substring(session.loginUser.realName, 0, 1)}">用</a>
+                <a th:href="@{/user/center}" th:text="${session.loginUser.realName}">用户</a>
+                <a th:if="${session.loginUser.admin or session.loginUser.host}"
+                   th:href="@{/admin/index}" class="btn btn-sm btn-outline">后台管理</a>
+                <a th:href="@{/logout}" class="btn btn-sm btn-ghost">退出</a>
+            </th:block>
+            <!-- 未登录：显示登录与注册入口 -->
+            <th:block th:unless="${session.loginUser != null}">
+                <a th:href="@{/login}" class="btn btn-sm btn-outline">登录</a>
+                <a th:href="@{/register}" class="btn btn-sm">免费注册</a>
+            </th:block>
+        </div>
+    </div>
+</header>
+
+<!-- ==================== 页脚 ==================== -->
+<footer th:fragment="footer" class="site-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-title">云栖民宿 · 让旅行住进风景里</div>
+                <p style="font-size:13px;line-height:1.9">
+                    我们精选全国各地的特色民宿，从洱海边的无边泳池到莫干山的竹林木屋，
+                    为每一次出行找到合适的落脚点。
+                </p>
+            </div>
+            <div>
+                <div class="footer-title">探索</div>
+                <ul class="footer-links">
+                    <li><a href="/house/list">全部房源</a></li>
+                    <li><a href="/house/list?sortBy=hotDesc">热门推荐</a></li>
+                    <li><a href="/house/list?sortBy=priceAsc">经济之选</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="footer-title">帮助</div>
+                <ul class="footer-links">
+                    <li><a href="/notice/list">平台公告</a></li>
+                    <li><a href="/about">关于我们</a></li>
+                    <li><a href="/notice/detail/3">入住须知</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="footer-title">联系我们</div>
+                <ul class="footer-links">
+                    <li>客服电话：400-888-0000</li>
+                    <li>邮箱：service@minsu.com</li>
+                    <li>服务时间：09:00 - 21:00</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2026 云栖民宿预订管理系统 · 计算机科学与工程学院《Web编程技术》课程设计
+        </div>
+    </div>
+</footer>
+
+<!-- ==================== 分页组件 ==================== -->
+<div th:fragment="pagination(page)" class="pagination" th:if="${page != null and page.total > 0}">
+    <a href="javascript:void(0)" th:classappend="${!page.hasPrevious} ? 'disabled'"
+       th:onclick="${page.hasPrevious} ? 'Minsu.goPage(1)' : ''">首页</a>
+    <a href="javascript:void(0)" th:classappend="${!page.hasPrevious} ? 'disabled'"
+       th:onclick="${page.hasPrevious} ? 'Minsu.goPage(' + (page.pageNum - 1) + ')' : ''">上一页</a>
+
+    <!-- 只显示当前页附近的页码，避免页数过多时撑破布局 -->
+    <th:block th:with="start=${page.pageNum - 2 > 0 ? page.pageNum - 2 : 1},
+                       end=${page.pageNum + 2 < page.pages ? page.pageNum + 2 : page.pages}">
+        <a th:each="i : ${#numbers.sequence(start, end)}"
+           href="javascript:void(0)"
+           th:classappend="${i == page.pageNum} ? 'current'"
+           th:text="${i}"
+           th:onclick="'Minsu.goPage(' + ${i} + ')'">1</a>
+    </th:block>
+
+    <a href="javascript:void(0)" th:classappend="${!page.hasNext} ? 'disabled'"
+       th:onclick="${page.hasNext} ? 'Minsu.goPage(' + (page.pageNum + 1) + ')' : ''">下一页</a>
+    <a href="javascript:void(0)" th:classappend="${!page.hasNext} ? 'disabled'"
+       th:onclick="${page.hasNext} ? 'Minsu.goPage(' + page.pages + ')' : ''">末页</a>
+
+    <span class="pagination-info">
+        共 <b th:text="${page.total}">0</b> 条 / <b th:text="${page.pages}">0</b> 页
+    </span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head(${house.title})}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('house')}"></header>
+
+<main class="page-main">
+    <div class="container">
+
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> /
+            <a href="/house/list">找民宿</a> /
+            <a th:href="@{/house/list(categoryId=${house.categoryId})}" th:text="${house.categoryName}">分类</a> /
+            <span th:text="${house.title}">房源</span>
+        </div>
+
+        <div class="detail-layout">
+
+            <!-- ==================== 左侧：房源信息 ==================== -->
+            <div>
+                <!-- 图片画廊 -->
+                <div class="gallery-main">
+                    <img id="galleryMain" th:src="${house.coverImg}" th:alt="${house.title}">
+                </div>
+                <div class="gallery-thumbs">
+                    <div class="gallery-thumb active">
+                        <img th:src="${house.coverImg}" th:data-large="${house.coverImg}" th:alt="封面">
+                    </div>
+                    <div class="gallery-thumb" th:each="img : ${house.images}">
+                        <img th:src="${img.imageUrl}" th:data-large="${img.imageUrl}" th:alt="${img.imageName}">
+                    </div>
+                </div>
+
+                <!-- 标题与基础信息 -->
+                <div class="card" style="margin-top:22px">
+                    <div class="card-body">
+                        <h1 class="detail-title" th:text="${house.title}">房源标题</h1>
+                        <div class="detail-meta">
+                            <span th:text="'★ ' + ${house.score} + ' 分'">★ 5.0 分</span>
+                            <span th:text="${house.reviewCount} + ' 条评价'">0 条评价</span>
+                            <span th:text="'浏览 ' + ${house.viewCount}">浏览 0</span>
+                            <span th:text="'编号 ' + ${house.houseNo}">编号</span>
+                        </div>
+                        <div style="display:flex;align-items:flex-start;gap:8px;color:#4b5563;margin-bottom:20px">
+                            <span>📍</span>
+                            <span th:text="${house.fullAddress}">地址</span>
+                        </div>
+
+                        <!-- 房源参数 -->
+                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+                                    padding:18px 0;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb">
+                            <div>
+                                <div style="color:#6b7280;font-size:12px">户型</div>
+                                <div style="font-weight:600" th:text="${house.layoutText}">2室1厅1卫</div>
+                            </div>
+                            <div>
+                                <div style="color:#6b7280;font-size:12px">面积</div>
+                                <div style="font-weight:600" th:text="${house.area} + ' ㎡'">60 ㎡</div>
+                            </div>
+                            <div>
+                                <div style="color:#6b7280;font-size:12px">床位</div>
+                                <div style="font-weight:600" th:text="${house.bedCount} + ' 张'">1 张</div>
+                            </div>
+                            <div>
+                                <div style="color:#6b7280;font-size:12px">可住人数</div>
+                                <div style="font-weight:600" th:text="${house.maxGuest} + ' 人'">2 人</div>
+                            </div>
+                        </div>
+
+                        <!-- 房源描述 -->
+                        <h3 style="margin:22px 0 10px;font-size:16px">房源介绍</h3>
+                        <p style="line-height:1.95;color:#374151" th:text="${house.description}">描述</p>
+
+                        <!-- 配套设施 -->
+                        <h3 style="margin:22px 0 12px;font-size:16px">配套设施</h3>
+                        <div class="facility-list">
+                            <span class="facility-item" th:each="f : ${house.facilityList}"
+                                  th:text="'✓ ' + ${f}">设施</span>
+                        </div>
+
+                        <!-- 房东信息 -->
+                        <h3 style="margin:22px 0 12px;font-size:16px">房东信息</h3>
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <div class="review-avatar"
+                                 th:text="${#strings.substring(house.hostName, 0, 1)}">房</div>
+                            <div>
+                                <div style="font-weight:600" th:text="${house.hostName}">房东</div>
+                                <div style="color:#6b7280;font-size:13px"
+                                     th:text="'联系电话：' + ${house.hostPhone}">电话</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== 住客评价 ==================== -->
+                <div class="card" style="margin-top:22px">
+                    <div class="card-header">
+                        <div class="card-title">
+                            住客评价（<span th:text="${house.reviewCount}">0</span>）
+                        </div>
+                    </div>
+                    <div class="card-body" style="padding-top:6px">
+                        <div th:if="${reviews.size() == 0}" class="empty" style="padding:40px 0">
+                            <div class="empty-icon">💬</div>
+                            <div class="empty-text">还没有住客评价，期待你的第一条分享</div>
+                        </div>
+
+                        <div class="review-item" th:each="r : ${reviews}">
+                            <div class="review-avatar"
+                                 th:text="${#strings.substring(r.userRealName, 0, 1)}">用</div>
+                            <div style="flex:1;min-width:0">
+                                <div class="review-head">
+                                    <div>
+                                        <span class="review-name" th:text="${r.userRealName}">用户</span>
+                                        <span class="review-stars" style="margin-left:8px"
+                                              th:text="${r.starText}">★★★★★</span>
+                                    </div>
+                                    <span class="review-time"
+                                          th:text="${#temporals.format(r.creationDate, 'yyyy-MM-dd')}">2026-01-01</span>
+                                </div>
+                                <div class="review-content" th:text="${r.content}">评价内容</div>
+                                <div class="review-reply" th:if="${r.reply != null and r.reply != ''}">
+                                    <strong>房东回复：</strong><span th:text="${r.reply}">回复</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 右侧：预订面板 ==================== -->
+            <div>
+                <div class="booking-panel" id="bookingPanel"
+                     th:attr="data-house-id=${house.id},
+                              data-price=${house.price},
+                              data-max-guest=${house.maxGuest},
+                              data-today=${today}">
+
+                    <div style="display:flex;align-items:baseline;justify-content:space-between">
+                        <div class="booking-price">
+                            ¥<span th:text="${house.price}">688</span><small> / 晚</small>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm"
+                                data-action="favorite" th:data-house-id="${house.id}"
+                                th:classappend="${favorited} ? 'active'"
+                                th:text="${favorited} ? '♥ 已收藏' : '♡ 收藏'">♡ 收藏</button>
+                    </div>
+
+                    <div id="availableTip" class="alert alert-error"
+                         style="display:none;margin-top:14px;font-size:13px"></div>
+
+                    <!-- 未登录时提示登录 -->
+                    <div th:if="${loginUser == null}" class="alert alert-info" style="margin-top:16px">
+                        <span>请先登录后再预订房源</span>
+                    </div>
+
+                    <form id="bookingForm" style="margin-top:16px" onsubmit="return false">
+                        <div class="form-row" style="grid-template-columns:1fr 1fr;gap:0 12px">
+                            <div class="form-group">
+                                <label class="form-label">入住日期<span class="required">*</span></label>
+                                <input type="date" id="checkInDate" class="form-control"
+                                       data-rule="required" data-label="入住日期">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">退房日期<span class="required">*</span></label>
+                                <input type="date" id="checkOutDate" class="form-control"
+                                       data-rule="required" data-label="退房日期">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">入住人数<span class="required">*</span></label>
+                            <input type="number" id="guestNum" class="form-control" value="2" min="1"
+                                   th:max="${house.maxGuest}" data-rule="required|positive" data-label="入住人数">
+                            <div class="form-hint" th:text="'该房源最多可住 ' + ${house.maxGuest} + ' 人'">提示</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">联系人<span class="required">*</span></label>
+                            <input type="text" id="contactName" class="form-control"
+                                   th:value="${loginUser != null ? loginUser.realName : ''}"
+                                   placeholder="请填写入住人姓名"
+                                   data-rule="required" data-label="联系人">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">手机号码<span class="required">*</span></label>
+                            <input type="text" id="contactPhone" class="form-control"
+                                   th:value="${loginUser != null ? loginUser.phone : ''}"
+                                   placeholder="用于接收订单通知"
+                                   data-rule="required|phone" data-label="手机号码">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">备注</label>
+                            <textarea id="remark" class="form-control" rows="2"
+                                      placeholder="如有特殊需求可在此说明"></textarea>
+                        </div>
+
+                        <!-- 费用明细，由 AJAX 实时更新 -->
+                        <div class="booking-total">
+                            <span style="color:#6b7280">入住晚数</span>
+                            <span id="nightsText" style="font-weight:600">—</span>
+                        </div>
+                        <div style="display:flex;align-items:baseline;justify-content:space-between;
+                                    padding-bottom:14px">
+                            <span style="color:#6b7280">合计金额</span>
+                            <span id="totalText" style="font-size:22px;font-weight:700;color:#dc2626">¥ 0</span>
+                        </div>
+
+                        <th:block th:if="${loginUser != null}">
+                            <button type="button" id="bookingSubmit" class="btn btn-lg btn-block">
+                                立即预订
+                            </button>
+                        </th:block>
+                        <th:block th:if="${loginUser == null}">
+                            <a th:href="@{/login(redirect='/house/detail/' + ${house.id})}"
+                               class="btn btn-lg btn-block">登录后预订</a>
+                        </th:block>
+                    </form>
+
+                    <div class="form-hint" style="text-align:center;margin-top:12px">
+                        下单后请在 30 分钟内完成支付
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/house-detail.js}"></script>
+
+</body>
+</html>

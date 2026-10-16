@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('编辑公告')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('notice')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('编辑公告')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> /
+            <a href="/admin/notice/list">公告管理</a> /
+            <span th:text="${notice.id == null} ? '发布公告' : '编辑公告'">编辑公告</span>
+        </div>
+
+        <div class="alert alert-error" th:if="${error != null}">
+            <span th:text="${error}">错误信息</span>
+        </div>
+
+        <form action="/admin/notice/save" method="post" style="max-width:820px">
+            <input type="hidden" name="id" th:value="${notice.id}">
+
+            <div class="form-section">
+                <div class="form-section-title">公告内容</div>
+
+                <div class="form-group">
+                    <label class="form-label">公告标题<span class="required">*</span></label>
+                    <input type="text" name="title" class="form-control" maxlength="80"
+                           th:value="${notice.title}"
+                           placeholder="请输入公告标题"
+                           data-rule="required" data-label="公告标题">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">公告类型<span class="required">*</span></label>
+                        <select name="type" class="form-control">
+                            <option value="1" th:selected="${notice.type == null or notice.type == 1}">
+                                系统公告</option>
+                            <option value="2" th:selected="${notice.type != null and notice.type == 2}">
+                                活动促销</option>
+                            <option value="3" th:selected="${notice.type != null and notice.type == 3}">
+                                入住须知</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">发布状态</label>
+                        <select name="status" class="form-control">
+                            <option value="1" th:selected="${notice.status == null or notice.status == 1}">
+                                立即发布</option>
+                            <option value="0" th:selected="${notice.status != null and notice.status == 0}">
+                                保存为草稿</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">公告正文<span class="required">*</span></label>
+                    <textarea name="content" class="form-control" rows="12"
+                              th:text="${notice.content}"
+                              placeholder="请输入公告正文内容"
+                              data-rule="required" data-label="公告正文"></textarea>
+                    <div class="form-hint">正文中的换行会原样保留，在前台按段落展示</div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-lg"
+                        th:text="${notice.id == null} ? '发布公告' : '保存修改'">保存</button>
+                <a href="/admin/notice/list" class="btn btn-lg btn-outline">取消</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script>
+    document.querySelector('form[action="/admin/notice/save"]').addEventListener('submit', function (e) {
+        if (!Minsu.validateForm(this)) {
+            e.preventDefault();
+        }
+    });
+</script>
+
+</body>
+</html>

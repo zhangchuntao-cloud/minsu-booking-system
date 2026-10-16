@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.code.web_homework.mapper.HouseImageMapper">
+
+    <resultMap id="BaseResultMap" type="HouseImage">
+        <id     column="id"            property="id"/>
+        <result column="house_id"      property="houseId"/>
+        <result column="image_url"     property="imageUrl"/>
+        <result column="image_name"    property="imageName"/>
+        <result column="sort"          property="sort"/>
+        <result column="creation_date" property="creationDate"/>
+    </resultMap>
+
+    <select id="selectByHouseId" resultMap="BaseResultMap">
+        SELECT id, house_id, image_url, image_name, sort, creation_date
+        FROM house_image
+        WHERE house_id = #{houseId}
+        ORDER BY sort ASC, id ASC
+    </select>
+
+    <!-- 批量插入：foreach 拼接成一条 INSERT，比循环单条插入减少大量数据库往返 -->
+    <insert id="insertBatch">
+        INSERT INTO house_image (house_id, image_url, image_name, sort, creation_date)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.houseId}, #{item.imageUrl}, #{item.imageName}, #{item.sort}, NOW())
+        </foreach>
+    </insert>
+
+    <delete id="deleteByHouseId">
+        DELETE FROM house_image WHERE house_id = #{houseId}
+    </delete>
+
+</mapper>

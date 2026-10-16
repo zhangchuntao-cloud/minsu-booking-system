@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+  后台公共片段
+  侧边栏菜单根据登录用户的角色动态渲染：
+  管理员可见全部菜单，房东只能看到与自己房源相关的功能。
+-->
+<body>
+
+<!-- ==================== 后台 head ==================== -->
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 云栖民宿后台管理'">后台管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<!-- ==================== 侧边栏 ==================== -->
+<aside th:fragment="sidebar(menu)" class="admin-sidebar">
+    <div class="admin-logo">
+        <span class="logo-icon">栖</span>
+        <span>云栖民宿后台</span>
+    </div>
+
+    <nav class="admin-menu">
+        <a th:href="@{/admin/index}" th:classappend="${menu == 'index'} ? 'active'">
+            <span class="menu-icon">📊</span><span>工作台</span>
+        </a>
+
+        <!-- 房源相关：管理员与房东均可见 -->
+        <div class="admin-menu-group">房源管理</div>
+        <a th:href="@{/admin/house/list}" th:classappend="${menu == 'house'} ? 'active'">
+            <span class="menu-icon">🏠</span>
+            <span th:text="${session.loginUser.host} ? '我的房源' : '房源管理'">房源管理</span>
+        </a>
+        <a th:if="${session.loginUser.admin}" th:href="@{/admin/category/list}"
+           th:classappend="${menu == 'category'} ? 'active'">
+            <span class="menu-icon">🏷</span><span>分类管理</span>
+        </a>
+
+        <!-- 订单与评价 -->
+        <div class="admin-menu-group">交易管理</div>
+        <a th:href="@{/admin/order/list}" th:classappend="${menu == 'order'} ? 'active'">
+            <span class="menu-icon">📋</span>
+            <span th:text="${session.loginUser.host} ? '房源订单' : '订单管理'">订单管理</span>
+        </a>
+        <a th:href="@{/admin/review/list}" th:classappend="${menu == 'review'} ? 'active'">
+            <span class="menu-icon">💬</span><span>评价管理</span>
+        </a>
+
+        <!-- 管理员专属 -->
+        <th:block th:if="${session.loginUser.admin}">
+            <div class="admin-menu-group">系统管理</div>
+            <a th:href="@{/admin/user/list}" th:classappend="${menu == 'user'} ? 'active'">
+                <span class="menu-icon">👥</span><span>用户管理</span>
+            </a>
+            <a th:href="@{/admin/notice/list}" th:classappend="${menu == 'notice'} ? 'active'">
+                <span class="menu-icon">📢</span><span>公告管理</span>
+            </a>
+            <a th:href="@{/admin/stat}" th:classappend="${menu == 'stat'} ? 'active'">
+                <span class="menu-icon">📈</span><span>数据统计</span>
+            </a>
+            <a th:href="@{/admin/log/list}" th:classappend="${menu == 'log'} ? 'active'">
+                <span class="menu-icon">📄</span><span>操作日志</span>
+            </a>
+        </th:block>
+
+        <div class="admin-menu-group">其它</div>
+        <a th:href="@{/index}">
+            <span class="menu-icon">🌐</span><span>返回前台</span>
+        </a>
+        <a th:href="@{/logout}">
+            <span class="menu-icon">🚪</span><span>退出登录</span>
+        </a>
+    </nav>
+</aside>
+
+<!-- ==================== 顶栏 ==================== -->
+<div th:fragment="topbar(pageTitle)" class="admin-topbar">
+    <div style="display:flex;align-items:center;gap:14px">
+        <span id="sidebarToggle" style="cursor:pointer;display:none">☰</span>
+        <span class="admin-page-title" th:text="${pageTitle}">页面标题</span>
+    </div>
+    <div class="admin-user">
+        <span class="nav-avatar"
+              th:text="${#strings.substring(session.loginUser.realName, 0, 1)}">用</span>
+        <div style="line-height:1.35">
+            <div style="font-weight:600" th:text="${session.loginUser.realName}">用户</div>
+            <div style="color:#6b7280;font-size:12px"
+                 th:text="${session.loginUser.roleText}">角色</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 后台分页 ==================== -->
+<div th:fragment="pagination(page)" class="pagination" th:if="${page != null and page.total > 0}">
+    <a href="javascript:void(0)" th:classappend="${!page.hasPrevious} ? 'disabled'"
+       th:onclick="${page.hasPrevious} ? 'Minsu.goPage(1)' : ''">首页</a>
+    <a href="javascript:void(0)" th:classappend="${!page.hasPrevious} ? 'disabled'"
+       th:onclick="${page.hasPrevious} ? 'Minsu.goPage(' + (page.pageNum - 1) + ')' : ''">上一页</a>
+
+    <th:block th:with="start=${page.pageNum - 2 > 0 ? page.pageNum - 2 : 1},
+                       end=${page.pageNum + 2 < page.pages ? page.pageNum + 2 : page.pages}">
+        <a th:each="i : ${#numbers.sequence(start, end)}"
+           href="javascript:void(0)"
+           th:classappend="${i == page.pageNum} ? 'current'"
+           th:text="${i}"
+           th:onclick="'Minsu.goPage(' + ${i} + ')'">1</a>
+    </th:block>
+
+    <a href="javascript:void(0)" th:classappend="${!page.hasNext} ? 'disabled'"
+       th:onclick="${page.hasNext} ? 'Minsu.goPage(' + (page.pageNum + 1) + ')' : ''">下一页</a>
+    <a href="javascript:void(0)" th:classappend="${!page.hasNext} ? 'disabled'"
+       th:onclick="${page.hasNext} ? 'Minsu.goPage(' + page.pages + ')' : ''">末页</a>
+
+    <span class="pagination-info">
+        共 <b th:text="${page.total}">0</b> 条 / <b th:text="${page.pages}">0</b> 页
+    </span>
+</div>
+
+</body>
+</html>

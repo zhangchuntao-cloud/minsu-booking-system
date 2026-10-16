@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('找民宿')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('house')}"></header>
+
+<main class="page-main">
+    <div class="container">
+
+        <!-- 面包屑导航 -->
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> / <span>找民宿</span>
+        </div>
+
+        <!-- ==================== 筛选栏 ==================== -->
+        <form class="filter-bar" action="/house/list" method="get">
+            <div class="filter-row">
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">关键词</label>
+                    <input type="text" name="keyword" class="form-control"
+                           th:value="${query.keyword}" placeholder="房源名称 / 城市 / 地址">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">房源类型</label>
+                    <select name="categoryId" class="form-control">
+                        <option value="">不限</option>
+                        <option th:each="c : ${categories}" th:value="${c.id}"
+                                th:text="${c.categoryName}"
+                                th:selected="${query.categoryId != null and query.categoryId == c.id}">分类</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">最低价</label>
+                    <input type="number" name="minPrice" class="form-control"
+                           th:value="${query.minPrice}" placeholder="不限" min="0">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">最高价</label>
+                    <input type="number" name="maxPrice" class="form-control"
+                           th:value="${query.maxPrice}" placeholder="不限" min="0">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">入住人数</label>
+                    <select name="guestNum" class="form-control">
+                        <option value="">不限</option>
+                        <option value="2" th:selected="${query.guestNum != null and query.guestNum == 2}">2 人</option>
+                        <option value="4" th:selected="${query.guestNum != null and query.guestNum == 4}">4 人</option>
+                        <option value="6" th:selected="${query.guestNum != null and query.guestNum == 6}">6 人</option>
+                        <option value="8" th:selected="${query.guestNum != null and query.guestNum == 8}">8 人及以上</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">排序方式</label>
+                    <select name="sortBy" class="form-control">
+                        <option value="default" th:selected="${query.sortBy == 'default'}">综合排序</option>
+                        <option value="hotDesc" th:selected="${query.sortBy == 'hotDesc'}">预订最多</option>
+                        <option value="scoreDesc" th:selected="${query.sortBy == 'scoreDesc'}">评分最高</option>
+                        <option value="priceAsc" th:selected="${query.sortBy == 'priceAsc'}">价格从低到高</option>
+                        <option value="priceDesc" th:selected="${query.sortBy == 'priceDesc'}">价格从高到低</option>
+                    </select>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button type="submit" class="btn">筛选</button>
+                    <a href="/house/list" class="btn btn-outline">重置</a>
+                </div>
+            </div>
+        </form>
+
+        <!-- ==================== 结果统计 ==================== -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="color:#6b7280;font-size:13px">
+                共找到 <b style="color:#0f766e" th:text="${page.total}">0</b> 套房源
+                <th:block th:if="${query.keyword != null and query.keyword != ''}">
+                    ，关键词「<span th:text="${query.keyword}"></span>」
+                </th:block>
+            </div>
+        </div>
+
+        <!-- ==================== 房源列表 ==================== -->
+        <div class="house-grid" th:if="${page.list.size() > 0}">
+            <a th:each="h : ${page.list}" th:href="@{/house/detail/{id}(id=${h.id})}" class="house-card">
+                <div class="house-cover">
+                    <img th:src="${h.coverImg}" th:alt="${h.title}" loading="lazy">
+                    <span class="house-badge" th:text="${h.categoryName}">分类</span>
+                    <span class="house-score" th:text="'★ ' + ${h.score}">★ 5.0</span>
+                </div>
+                <div class="house-info">
+                    <div class="house-name" th:text="${h.title}">房源标题</div>
+                    <div class="house-loc">
+                        <span>📍</span>
+                        <span th:text="${h.city} + ' · ' + ${h.district}">城市</span>
+                    </div>
+                    <div class="house-tags">
+                        <span class="tag" th:text="${h.layoutText}">2室1厅1卫</span>
+                        <span class="tag" th:text="'可住 ' + ${h.maxGuest} + ' 人'">可住 2 人</span>
+                        <span class="tag" th:text="${h.area} + '㎡'">60㎡</span>
+                    </div>
+                    <div class="house-foot">
+                        <div class="price" th:text="'¥' + ${h.price}">¥688<small>/晚</small></div>
+                        <span style="color:#6b7280;font-size:13px"
+                              th:text="'已订 ' + ${h.orderCount} + ' 次'">已订 0 次</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 空结果提示 -->
+        <div class="empty" th:if="${page.list.size() == 0}">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-text">没有找到符合条件的房源，换个条件试试吧</div>
+            <a href="/house/list" class="btn btn-outline">查看全部房源</a>
+        </div>
+
+        <div th:replace="~{fragments/common :: pagination(${page})}"></div>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>

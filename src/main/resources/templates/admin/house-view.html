@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('房源详情')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('house')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('房源详情')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> /
+            <a href="/admin/house/list">房源管理</a> /
+            <span th:text="${house.title}">房源</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start">
+
+            <!-- 左侧：房源完整信息 -->
+            <div>
+                <div class="card">
+                    <div class="card-body">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                            <h2 style="font-size:20px;font-weight:700" th:text="${house.title}">房源标题</h2>
+                            <span class="badge" th:classappend="${house.statusStyle}"
+                                  th:text="${house.statusText}">状态</span>
+                        </div>
+
+                        <img th:src="${house.coverImg}" th:alt="${house.title}"
+                             style="width:100%;height:300px;object-fit:cover;border-radius:12px">
+
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px">
+                            <img th:each="img : ${house.images}" th:src="${img.imageUrl}"
+                                 th:alt="${img.imageName}"
+                                 style="width:100%;height:100px;object-fit:cover;border-radius:8px">
+                        </div>
+
+                        <table class="data-table" style="margin-top:20px">
+                            <tbody>
+                            <tr>
+                                <th style="width:120px">房源编号</th>
+                                <td th:text="${house.houseNo}">编号</td>
+                                <th style="width:120px">房源分类</th>
+                                <td th:text="${house.categoryName}">分类</td>
+                            </tr>
+                            <tr>
+                                <th>所属房东</th>
+                                <td th:text="${house.hostName} + '（' + ${house.hostPhone} + '）'">房东</td>
+                                <th>每晚价格</th>
+                                <td style="color:#dc2626;font-weight:600" th:text="'¥' + ${house.price}">价格</td>
+                            </tr>
+                            <tr>
+                                <th>详细地址</th>
+                                <td colspan="3" th:text="${house.fullAddress}">地址</td>
+                            </tr>
+                            <tr>
+                                <th>户型信息</th>
+                                <td th:text="${house.layoutText}">户型</td>
+                                <th>面积 / 可住</th>
+                                <td th:text="${house.area} + '㎡ / ' + ${house.maxGuest} + '人'">面积</td>
+                            </tr>
+                            <tr>
+                                <th>浏览 / 预订</th>
+                                <td th:text="${house.viewCount} + ' 次 / ' + ${house.orderCount} + ' 单'">数据</td>
+                                <th>综合评分</th>
+                                <td th:text="${house.score} + ' 分'">评分</td>
+                            </tr>
+                            <tr>
+                                <th>配套设施</th>
+                                <td colspan="3">
+                                    <span class="tag" style="margin-right:6px" th:each="f : ${house.facilityList}"
+                                          th:text="${f}">设施</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>房源介绍</th>
+                                <td colspan="3" style="line-height:1.9" th:text="${house.description}">描述</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：审核操作 -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">审核操作</div>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${house.auditRemark != null and house.auditRemark != ''}"
+                             class="alert alert-info" style="font-size:13px">
+                            <span th:text="'审核意见：' + ${house.auditRemark}">审核意见</span>
+                        </div>
+
+                        <div th:if="${loginUser.admin}" class="form-group">
+                            <label class="form-label">审核结果</label>
+                            <div style="display:flex;gap:10px">
+                                <label class="facility-item" style="cursor:pointer;flex:1;text-align:center">
+                                    <input type="radio" name="auditStatus" value="1" checked> 通过
+                                </label>
+                                <label class="facility-item" style="cursor:pointer;flex:1;text-align:center">
+                                    <input type="radio" name="auditStatus" value="3"> 驳回
+                                </label>
+                            </div>
+                        </div>
+
+                        <div th:if="${loginUser.admin}" class="form-group">
+                            <label class="form-label">审核意见</label>
+                            <textarea id="auditRemark" class="form-control" rows="3"
+                                      placeholder="驳回时必填"></textarea>
+                        </div>
+
+                        <div style="display:flex;flex-direction:column;gap:9px">
+                            <button th:if="${loginUser.admin}" type="button" class="btn" id="auditBtn">
+                                提交审核
+                            </button>
+                            <a th:href="@{/admin/house/edit/{id}(id=${house.id})}"
+                               class="btn btn-outline">编辑房源</a>
+                            <a th:href="@{/house/detail/{id}(id=${house.id})}" target="_blank"
+                               class="btn btn-outline">前台预览</a>
+                            <a href="/admin/house/list" class="btn btn-ghost">返回列表</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script th:inline="javascript">
+    var houseId = /*[[${house.id}]]*/ 0;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var auditBtn = document.getElementById('auditBtn');
+        if (!auditBtn) {
+            return;
+        }
+        auditBtn.addEventListener('click', function () {
+            var status = document.querySelector('input[name="auditStatus"]:checked').value;
+            var remark = document.getElementById('auditRemark').value.trim();
+            if (status === '3' && !remark) {
+                Minsu.toast('驳回房源时必须填写审核意见', 'error');
+                return;
+            }
+            auditBtn.disabled = true;
+            Minsu.post('/admin/house/audit', {id: houseId, status: status, auditRemark: remark})
+                .then(function (result) {
+                    Minsu.toast(result.msg, 'success');
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 900);
+                })
+                .catch(function () {
+                    auditBtn.disabled = false;
+                });
+        });
+    });
+</script>
+
+</body>
+</html>

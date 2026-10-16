@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('工作台')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('index')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('工作台')}"></div>
+
+    <div class="admin-content">
+
+        <!-- 欢迎条 -->
+        <div class="card" style="margin-bottom:18px">
+            <div class="card-body" style="display:flex;align-items:center;justify-content:space-between">
+                <div>
+                    <div style="font-size:19px;font-weight:700">
+                        你好，<span th:text="${loginUser.realName}">用户</span>
+                    </div>
+                    <div style="color:#6b7280;font-size:13px;margin-top:5px">
+                        <span th:text="${loginUser.roleText}">角色</span>
+                        · 今天是
+                        <span th:text="${#temporals.format(#temporals.createToday(), 'yyyy年MM月dd日')}">日期</span>
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px">
+                    <a th:if="${loginUser.admin}" href="/admin/house/list?status=0" class="btn btn-accent">
+                        待审核房源（<span th:text="${overview.pendingHouses}">0</span>）
+                    </a>
+                    <a href="/admin/house/edit" class="btn">发布房源</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 核心指标 ==================== -->
+        <div class="dash-grid">
+            <div class="dash-card">
+                <div class="dash-label">房源总数</div>
+                <div class="dash-value" th:text="${overview.totalHouses}">0</div>
+                <div class="dash-trend">
+                    在营 <span th:text="${overview.onlineHouses}">0</span> 套 ·
+                    待审核 <span th:text="${overview.pendingHouses}">0</span> 套
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-label">订单总数</div>
+                <div class="dash-value" th:text="${overview.totalOrders}">0</div>
+                <div class="dash-trend">
+                    待处理 <span th:text="${overview.pendingOrders}">0</span> 单
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-label">累计成交金额</div>
+                <div class="dash-value">
+                    <small>¥</small><span th:text="${overview.totalAmount}">0</span>
+                </div>
+                <div class="dash-trend">
+                    本月 ¥<span th:text="${overview.monthAmount}">0</span>
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-label">注册用户</div>
+                <div class="dash-value" th:text="${overview.totalUsers}">0</div>
+                <div class="dash-trend">
+                    平均评分 <span th:text="${overview.avgScore}">0</span> 分
+                </div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:start">
+
+            <!-- ==================== 左侧：待办 + 图表 ==================== -->
+            <div>
+                <!-- 管理员：待审核房源 -->
+                <div class="card" th:if="${loginUser.admin}" style="margin-bottom:18px">
+                    <div class="card-header">
+                        <div class="card-title">待审核房源</div>
+                        <a href="/admin/house/list?status=0" class="section-more" style="font-size:13px">
+                            全部待审核 →
+                        </a>
+                    </div>
+                    <div class="card-body" style="padding-top:8px;padding-bottom:12px">
+                        <div class="empty" style="padding:36px 0"
+                             th:if="${pendingList == null or pendingList.size() == 0}">
+                            <div class="empty-icon">✓</div>
+                            <div class="empty-text">暂无待审核房源，一切正常</div>
+                        </div>
+                        <div class="todo-item" th:each="h : ${pendingList}">
+                            <img th:src="${h.coverImg}" th:alt="${h.title}"
+                                 style="width:74px;height:56px;object-fit:cover;border-radius:8px">
+                            <div class="todo-main">
+                                <div class="todo-title" th:text="${h.title}">房源</div>
+                                <div class="todo-meta">
+                                    <span th:text="${h.hostName}">房东</span> ·
+                                    <span th:text="${h.city}">城市</span> ·
+                                    ¥<span th:text="${h.price}">0</span>/晚 ·
+                                    <span th:text="${#temporals.format(h.creationDate, 'MM-dd HH:mm')}">时间</span>
+                                </div>
+                            </div>
+                            <a th:href="@{/admin/house/view/{id}(id=${h.id})}" class="btn btn-sm">去审核</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 房东：我的房源 -->
+                <div class="card" th:if="${loginUser.host}" style="margin-bottom:18px">
+                    <div class="card-header">
+                        <div class="card-title">
+                            我的房源（<span th:text="${myHouseCount}">0</span>）
+                        </div>
+                        <a href="/admin/house/list" class="section-more" style="font-size:13px">全部房源 →</a>
+                    </div>
+                    <div class="card-body" style="padding-top:8px;padding-bottom:12px">
+                        <div class="empty" style="padding:36px 0"
+                             th:if="${myHouses == null or myHouses.size() == 0}">
+                            <div class="empty-icon">🏠</div>
+                            <div class="empty-text">还没有发布房源</div>
+                            <a href="/admin/house/edit" class="btn">立即发布</a>
+                        </div>
+                        <div class="todo-item" th:each="h : ${myHouses}">
+                            <img th:src="${h.coverImg}" th:alt="${h.title}"
+                                 style="width:74px;height:56px;object-fit:cover;border-radius:8px">
+                            <div class="todo-main">
+                                <div class="todo-title" th:text="${h.title}">房源</div>
+                                <div class="todo-meta">
+                                    ¥<span th:text="${h.price}">0</span>/晚 ·
+                                    已订 <span th:text="${h.orderCount}">0</span> 次 ·
+                                    浏览 <span th:text="${h.viewCount}">0</span>
+                                </div>
+                            </div>
+                            <span class="badge" th:classappend="${h.statusStyle}"
+                                  th:text="${h.statusText}">状态</span>
+                            <a th:href="@{/admin/house/edit/{id}(id=${h.id})}" class="btn btn-sm btn-outline">编辑</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 营收趋势图 -->
+                <div class="card" th:if="${loginUser.admin}">
+                    <div class="card-header">
+                        <div class="card-title">本年度营收趋势</div>
+                        <a href="/admin/stat" class="section-more" style="font-size:13px">详细统计 →</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-canvas-wrap" style="height:260px">
+                            <canvas id="monthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 右侧：订单状态 + 日志 ==================== -->
+            <div>
+                <div class="card" style="margin-bottom:18px">
+                    <div class="card-header">
+                        <div class="card-title">订单状态分布</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-canvas-wrap" style="height:230px">
+                            <canvas id="orderStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">最近操作</div>
+                        <a th:if="${loginUser.admin}" href="/admin/log/list"
+                           class="section-more" style="font-size:13px">全部日志 →</a>
+                    </div>
+                    <div class="card-body" style="padding-top:8px;padding-bottom:12px">
+                        <div class="empty" style="padding:30px 0"
+                             th:if="${recentLogs == null or recentLogs.size() == 0}">
+                            <div class="empty-text">暂无操作记录</div>
+                        </div>
+                        <div class="log-item" th:each="log : ${recentLogs}">
+                            <span class="log-dot"></span>
+                            <div class="log-text">
+                                <div>
+                                    <b th:text="${log.username}">用户</b>
+                                    <span th:text="${log.operation}">操作</span>
+                                </div>
+                                <div class="log-time"
+                                     th:text="${#temporals.format(log.creationDate, 'MM-dd HH:mm:ss')}">时间</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/lib/chart.umd.js}"></script>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script>
+    /* 工作台图表：数据通过 AJAX 获取，避免页面首屏等待统计查询 */
+    document.addEventListener('DOMContentLoaded', function () {
+        Minsu.get('/admin/stat/data', {}, {silent: true}).then(function (result) {
+            var data = result.data;
+            Admin.renderLine('monthChart', data.monthAmount);
+            Admin.renderDoughnut('orderStatusChart', data.orderStatus);
+        }).catch(function () {
+            /* 统计接口异常时不阻塞页面其它内容 */
+        });
+    });
+</script>
+
+</body>
+</html>

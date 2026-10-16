@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.code.web_homework.mapper.BookingOrderMapper">
+
+    <resultMap id="BaseResultMap" type="BookingOrder">
+        <id     column="id"              property="id"/>
+        <result column="order_no"        property="orderNo"/>
+        <result column="user_id"         property="userId"/>
+        <result column="house_id"        property="houseId"/>
+        <result column="check_in_date"   property="checkInDate"/>
+        <result column="check_out_date"  property="checkOutDate"/>
+        <result column="nights"          property="nights"/>
+        <result column="guest_num"       property="guestNum"/>
+        <result column="unit_price"      property="unitPrice"/>
+        <result column="total_amount"    property="totalAmount"/>
+        <result column="contact_name"    property="contactName"/>
+        <result column="contact_phone"   property="contactPhone"/>
+        <result column="remark"          property="remark"/>
+        <result column="status"          property="status"/>
+        <result column="pay_type"        property="payType"/>
+        <result column="pay_time"        property="payTime"/>
+        <result column="created_by"      property="createdBy"/>
+        <result column="creation_date"   property="creationDate"/>
+        <result column="modify_by"       property="modifyBy"/>
+        <result column="modify_date"     property="modifyDate"/>
+        <!-- 关联查询带出的字段 -->
+        <result column="house_title"     property="houseTitle"/>
+        <result column="house_cover"     property="houseCover"/>
+        <result column="house_city"      property="houseCity"/>
+        <result column="house_address"   property="houseAddress"/>
+        <result column="host_id"         property="hostId"/>
+        <result column="username"        property="username"/>
+        <result column="user_real_name"  property="userRealName"/>
+        <result column="reviewed"        property="reviewed"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        o.id, o.order_no, o.user_id, o.house_id, o.check_in_date, o.check_out_date,
+        o.nights, o.guest_num, o.unit_price, o.total_amount, o.contact_name,
+        o.contact_phone, o.remark, o.status, o.pay_type, o.pay_time,
+        o.created_by, o.creation_date, o.modify_by, o.modify_date
+    </sql>
+
+    <!-- 详情查询：关联房源表与用户表，带出房源标题、封面、房东与下单人信息 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               h.title    AS house_title,
+               h.cover_img AS house_cover,
+               h.city     AS house_city,
+               h.address  AS house_address,
+               h.host_id  AS host_id,
+               u.username,
+               u.real_name AS user_real_name
+        FROM booking_order o
+        LEFT JOIN house h    ON o.house_id = h.id
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        WHERE o.id = #{id}
+    </select>
+
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               h.title    AS house_title,
+               h.cover_img AS house_cover,
+               h.city     AS house_city,
+               h.address  AS house_address,
+               h.host_id  AS host_id,
+               u.username,
+               u.real_name AS user_real_name
+        FROM booking_order o
+        LEFT JOIN house h    ON o.house_id = h.id
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        WHERE o.order_no = #{orderNo}
+    </select>
+
+    <!--
+      列表查询：支持订单号、状态、下单人、房东多维度筛选。
+      reviewed 子查询用于判断订单是否已评价，决定「评价」按钮是否显示。
+    -->
+    <select id="selectByQuery" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               h.title    AS house_title,
+               h.cover_img AS house_cover,
+               h.city     AS house_city,
+               h.address  AS house_address,
+               h.host_id  AS host_id,
+               u.username,
+               u.real_name AS user_real_name,
+               (SELECT COUNT(1) FROM review rv WHERE rv.order_id = o.id) AS reviewed
+        FROM booking_order o
+        LEFT JOIN house h    ON o.house_id = h.id
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                AND o.order_no LIKE CONCAT('%', #{orderNo}, '%')
+            </if>
+            <if test="status != null">
+                AND o.status = #{status}
+            </if>
+            <if test="userId != null">
+                AND o.user_id = #{userId}
+            </if>
+            <if test="hostId != null">
+                AND h.host_id = #{hostId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (o.contact_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR o.contact_phone LIKE CONCAT('%', #{keyword}, '%')
+                     OR h.title LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        <choose>
+            <when test="sortBy == 'amountDesc'">ORDER BY o.total_amount DESC</when>
+            <otherwise>ORDER BY o.creation_date DESC, o.id DESC</otherwise>
+        </choose>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByQuery" resultType="long">
+        SELECT COUNT(1)
+        FROM booking_order o
+        LEFT JOIN house h ON o.house_id = h.id
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                AND o.order_no LIKE CONCAT('%', #{orderNo}, '%')
+            </if>
+            <if test="status != null">
+                AND o.status = #{status}
+            </if>
+            <if test="userId != null">
+                AND o.user_id = #{userId}
+            </if>
+            <if test="hostId != null">
+                AND h.host_id = #{hostId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (o.contact_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR o.contact_phone LIKE CONCAT('%', #{keyword}, '%')
+                     OR h.title LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="BookingOrder" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO booking_order
+            (order_no, user_id, house_id, check_in_date, check_out_date, nights, guest_num,
+             unit_price, total_amount, contact_name, contact_phone, remark,
+             status, pay_type, pay_time, created_by, creation_date)
+        VALUES
+            (#{orderNo}, #{userId}, #{houseId}, #{checkInDate}, #{checkOutDate}, #{nights}, #{guestNum},
+             #{unitPrice}, #{totalAmount}, #{contactName}, #{contactPhone}, #{remark},
+             #{status}, #{payType}, #{payTime}, #{createdBy}, NOW())
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE booking_order
+        SET status = #{status}, modify_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePayInfo">
+        UPDATE booking_order
+        SET status = #{status}, pay_type = #{payType}, pay_time = #{payTime}, modify_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!--
+      日期区间冲突检测：两个区间相交的判定条件为
+      「已有订单的入住日 < 新订单的退房日」且「已有订单的退房日 > 新订单的入住日」。
+      仅统计未取消的订单（待支付/待入住/已入住），用于防止同一房源被重复预订。
+    -->
+    <select id="countDateConflict" resultType="int">
+        SELECT COUNT(1)
+        FROM booking_order
+        WHERE house_id = #{houseId}
+          AND status IN (0, 1, 2)
+          AND check_in_date &lt; #{checkOut}
+          AND check_out_date &gt; #{checkIn}
+    </select>
+
+    <!-- 查询某房源尚未结束的订单日期区间，供详情页日历置灰已预订日期 -->
+    <select id="selectActiveByHouseId" resultMap="BaseResultMap">
+        SELECT id, house_id, check_in_date, check_out_date, status
+        FROM booking_order
+        WHERE house_id = #{houseId}
+          AND status IN (0, 1, 2)
+        ORDER BY check_in_date ASC
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(1) FROM booking_order
+    </select>
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(1) FROM booking_order WHERE status = #{status}
+    </select>
+
+    <!-- 累计成交金额：排除已取消订单 -->
+    <select id="sumTotalAmount" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(total_amount), 0)
+        FROM booking_order
+        WHERE status IN (1, 2, 3)
+    </select>
+
+    <select id="sumMonthAmount" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(total_amount), 0)
+        FROM booking_order
+        WHERE status IN (1, 2, 3)
+          AND creation_date &gt;= #{start}
+          AND creation_date &lt; #{end}
+    </select>
+
+    <select id="countMonthOrders" resultType="int">
+        SELECT COUNT(1)
+        FROM booking_order
+        WHERE creation_date &gt;= #{start}
+          AND creation_date &lt; #{end}
+    </select>
+
+    <!-- 按月分组统计成交金额，用于后台营收折线图 -->
+    <select id="sumAmountGroupByMonth" resultType="java.util.Map">
+        SELECT MONTH(creation_date) AS name,
+               IFNULL(SUM(total_amount), 0) AS value
+        FROM booking_order
+        WHERE status IN (1, 2, 3)
+          AND YEAR(creation_date) = #{year}
+        GROUP BY MONTH(creation_date)
+        ORDER BY name ASC
+    </select>
+
+    <select id="countGroupByStatus" resultType="java.util.Map">
+        SELECT status AS name, COUNT(1) AS value
+        FROM booking_order
+        GROUP BY status
+        ORDER BY status ASC
+    </select>
+
+    <select id="selectTopHouses" resultType="java.util.Map">
+        SELECT h.title AS name, COUNT(o.id) AS value
+        FROM house h
+        LEFT JOIN booking_order o ON h.id = o.house_id AND o.status IN (1, 2, 3)
+        GROUP BY h.id, h.title
+        ORDER BY value DESC, h.id ASC
+        LIMIT #{limit}
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM booking_order WHERE id = #{id}
+    </delete>
+
+</mapper>

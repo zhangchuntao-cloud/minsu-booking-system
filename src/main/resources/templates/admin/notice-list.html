@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('公告管理')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('notice')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('公告管理')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> / <span>公告管理</span>
+        </div>
+
+        <div class="toolbar">
+            <div style="color:#6b7280;font-size:13px">
+                已发布的公告会显示在前台首页与公告列表页
+            </div>
+            <a href="/admin/notice/edit" class="btn btn-accent">+ 发布公告</a>
+        </div>
+
+        <div class="card">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th style="width:60px">ID</th>
+                        <th>公告标题</th>
+                        <th style="width:100px">类型</th>
+                        <th style="width:100px">发布人</th>
+                        <th style="width:150px">发布时间</th>
+                        <th style="width:90px">浏览量</th>
+                        <th style="width:90px">状态</th>
+                        <th style="width:160px">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="n : ${notices}">
+                        <td th:text="${n.id}">1</td>
+                        <td>
+                            <a th:href="@{/notice/detail/{id}(id=${n.id})}" target="_blank"
+                               style="font-weight:600" th:text="${n.title}">标题</a>
+                            <div style="color:#9ca3af;font-size:12px;margin-top:3px"
+                                 th:text="${n.summary}">摘要</div>
+                        </td>
+                        <td>
+                            <span class="badge" th:classappend="${n.typeStyle}"
+                                  th:text="${n.typeText}">类型</span>
+                        </td>
+                        <td th:text="${n.publisherName}">发布人</td>
+                        <td style="font-size:13px;color:#6b7280"
+                            th:text="${#temporals.format(n.publishTime, 'yyyy-MM-dd HH:mm')}">时间</td>
+                        <td th:text="${n.viewCount}">0</td>
+                        <td>
+                            <span class="badge" th:classappend="${n.status == 1} ? 'green' : 'gray'"
+                                  th:text="${n.status == 1} ? '已发布' : '草稿'">状态</span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a th:href="@{/admin/notice/edit/{id}(id=${n.id})}"
+                                   class="btn btn-sm btn-outline">编辑</a>
+                                <button type="button" class="btn btn-sm btn-outline"
+                                        style="border-color:#dc2626;color:#dc2626"
+                                        data-url="/admin/notice/delete"
+                                        th:data-id="${n.id}" 
+                                        data-confirm="删除后该公告将无法恢复，确定删除吗？"
+                                        data-confirm-text="确定删除">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty" th:if="${notices.size() == 0}">
+                <div class="empty-icon">📢</div>
+                <div class="empty-text">还没有发布过公告</div>
+                <a href="/admin/notice/edit" class="btn">发布第一条公告</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+
+</body>
+</html>

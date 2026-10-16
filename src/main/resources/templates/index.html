@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('首页')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('index')}"></header>
+
+<!-- ==================== 首屏轮播 ==================== -->
+<section class="hero">
+    <div class="hero-slide active" style="background-image:url('/images/banner/banner-1.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('/images/banner/banner-2.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('/images/banner/banner-3.jpg')"></div>
+
+    <div class="container" style="height:100%;position:relative;z-index:2">
+        <div class="hero-content">
+            <h1 class="hero-title">住进风景里<br>遇见不一样的旅途</h1>
+            <p class="hero-subtitle">
+                精选全国 15 家特色民宿，从洱海无边泳池到莫干山竹林木屋，
+                每一处都值得专程前往。
+            </p>
+            <div style="display:flex;gap:12px">
+                <a href="/house/list" class="btn btn-lg btn-accent">立即找民宿</a>
+                <a href="/about" class="btn btn-lg btn-outline"
+                   style="background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.5);color:#fff">
+                    了解我们
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-dots">
+        <span class="hero-dot active"></span>
+        <span class="hero-dot"></span>
+        <span class="hero-dot"></span>
+    </div>
+</section>
+
+<!-- ==================== 搜索栏 ==================== -->
+<div class="container">
+    <div class="search-panel">
+        <form class="search-form" action="/house/list" method="get">
+            <div class="form-group" style="margin:0">
+                <label class="form-label">目的地 / 关键词</label>
+                <input type="text" name="keyword" class="form-control" placeholder="如：大理、洱海、木屋">
+            </div>
+            <div class="form-group" style="margin:0">
+                <label class="form-label">房源类型</label>
+                <select name="categoryId" class="form-control">
+                    <option value="">不限</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.categoryName}">分类</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin:0">
+                <label class="form-label">入住人数</label>
+                <select name="guestNum" class="form-control">
+                    <option value="">不限</option>
+                    <option value="2">2 人</option>
+                    <option value="4">4 人</option>
+                    <option value="6">6 人</option>
+                    <option value="8">8 人及以上</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin:0">
+                <label class="form-label">价格上限</label>
+                <select name="maxPrice" class="form-control">
+                    <option value="">不限</option>
+                    <option value="400">400 元以内</option>
+                    <option value="700">700 元以内</option>
+                    <option value="1000">1000 元以内</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-lg">搜索房源</button>
+        </form>
+    </div>
+</div>
+
+<main class="page-main">
+    <div class="container">
+
+        <!-- ==================== 房源分类 ==================== -->
+        <section class="section" style="margin-top:40px">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">按类型探索</h2>
+                    <p class="section-desc">六种风格，总有一款适合你的旅行方式</p>
+                </div>
+            </div>
+            <div class="category-grid">
+                <a th:each="c : ${categories}" th:href="@{/house/list(categoryId=${c.id})}" class="category-item">
+                    <div class="category-icon" th:text="${c.icon}">🏠</div>
+                    <div class="category-name" th:text="${c.categoryName}">分类</div>
+                    <div class="category-count">
+                        <span th:text="${c.houseCount}">0</span> 套房源
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- ==================== 热门房源 ==================== -->
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">热门推荐</h2>
+                    <p class="section-desc">按真实预订量排序，住客用脚投票的选择</p>
+                </div>
+                <a href="/house/list?sortBy=hotDesc" class="section-more">查看全部 →</a>
+            </div>
+
+            <div class="house-grid">
+                <a th:each="h : ${hotHouses}" th:href="@{/house/detail/{id}(id=${h.id})}" class="house-card">
+                    <div class="house-cover">
+                        <img th:src="${h.coverImg}" th:alt="${h.title}" loading="lazy">
+                        <span class="house-badge" th:text="${h.categoryName}">分类</span>
+                        <span class="house-score" th:text="'★ ' + ${h.score}">★ 5.0</span>
+                    </div>
+                    <div class="house-info">
+                        <div class="house-name" th:text="${h.title}">房源标题</div>
+                        <div class="house-loc">
+                            <span>📍</span>
+                            <span th:text="${h.city} + ' · ' + ${h.district}">城市</span>
+                        </div>
+                        <div class="house-tags">
+                            <span class="tag" th:text="${h.layoutText}">2室1厅1卫</span>
+                            <span class="tag" th:text="'可住 ' + ${h.maxGuest} + ' 人'">可住 2 人</span>
+                            <span class="tag" th:text="${h.area} + '㎡'">60㎡</span>
+                        </div>
+                        <div class="house-foot">
+                            <div class="price" th:text="'¥' + ${h.price}">
+                                ¥688<small>/晚</small>
+                            </div>
+                            <span style="color:#6b7280;font-size:13px"
+                                  th:text="'已订 ' + ${h.orderCount} + ' 次'">已订 0 次</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- ==================== 平台数据 ==================== -->
+        <section class="section">
+            <div class="stat-row">
+                <div class="stat-card">
+                    <div class="stat-icon">🏠</div>
+                    <div>
+                        <div class="stat-value" th:text="${overview.onlineHouses}">0</div>
+                        <div class="stat-label">在营房源</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">👥</div>
+                    <div>
+                        <div class="stat-value" th:text="${overview.totalUsers}">0</div>
+                        <div class="stat-label">注册用户</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">📋</div>
+                    <div>
+                        <div class="stat-value" th:text="${overview.totalOrders}">0</div>
+                        <div class="stat-label">累计订单</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">⭐</div>
+                    <div>
+                        <div class="stat-value" th:text="${overview.avgScore}">0</div>
+                        <div class="stat-label">平均评分</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 最新上架 ==================== -->
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">最新上架</h2>
+                    <p class="section-desc">刚刚通过审核的新房源，抢先体验</p>
+                </div>
+                <a href="/house/list" class="section-more">查看全部 →</a>
+            </div>
+
+            <div class="house-grid">
+                <a th:each="h : ${latestHouses}" th:href="@{/house/detail/{id}(id=${h.id})}" class="house-card">
+                    <div class="house-cover">
+                        <img th:src="${h.coverImg}" th:alt="${h.title}" loading="lazy">
+                        <span class="house-badge" th:text="${h.categoryName}">分类</span>
+                        <span class="house-score" th:text="'★ ' + ${h.score}">★ 5.0</span>
+                    </div>
+                    <div class="house-info">
+                        <div class="house-name" th:text="${h.title}">房源标题</div>
+                        <div class="house-loc">
+                            <span>📍</span>
+                            <span th:text="${h.city} + ' · ' + ${h.district}">城市</span>
+                        </div>
+                        <div class="house-tags">
+                            <span class="tag" th:text="${h.layoutText}">2室1厅1卫</span>
+                            <span class="tag" th:text="'可住 ' + ${h.maxGuest} + ' 人'">可住 2 人</span>
+                            <span class="tag" th:text="${h.area} + '㎡'">60㎡</span>
+                        </div>
+                        <div class="house-foot">
+                            <div class="price" th:text="'¥' + ${h.price}">¥688<small>/晚</small></div>
+                            <span style="color:#6b7280;font-size:13px"
+                                  th:text="'浏览 ' + ${h.viewCount}">浏览 0</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- ==================== 公告与图表 ==================== -->
+        <section class="section">
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">平台公告</div>
+                        <a href="/notice/list" class="section-more" style="font-size:13px">全部公告 →</a>
+                    </div>
+                    <div class="card-body" style="padding-top:6px;padding-bottom:10px">
+                        <a th:each="n : ${notices}" th:href="@{/notice/detail/{id}(id=${n.id})}" class="notice-item">
+                            <div class="notice-date">
+                                <div class="notice-day"
+                                     th:text="${#temporals.day(n.publishTime)}">01</div>
+                                <div class="notice-month"
+                                     th:text="${#temporals.month(n.publishTime)} + '月'">1月</div>
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <div class="notice-title" th:text="${n.title}">公告标题</div>
+                                <div class="notice-summary" th:text="${n.summary}">公告摘要</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">房源类型分布</div>
+                    </div>
+                    <div class="card-body">
+                        <div style="position:relative;height:250px">
+                            <canvas id="homeCategoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+
+<script th:src="@{/js/lib/chart.umd.js}"></script>
+<script th:src="@{/js/common.js}"></script>
+<script th:inline="javascript">
+    /* 分类分布环形图：数据由服务端渲染进页面，无需额外请求 */
+    document.addEventListener('DOMContentLoaded', function () {
+        var labels = /*[[${categoryChart.labels}]]*/ [];
+        var values = /*[[${categoryChart.values}]]*/ [];
+        var canvas = document.getElementById('homeCategoryChart');
+        if (!canvas || !window.Chart) {
+            return;
+        }
+        new Chart(canvas, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: ['#0f766e', '#14b8a6', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'],
+                    borderWidth: 3,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '55%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {padding: 12, usePointStyle: true, pointStyle: 'circle', boxWidth: 8}
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

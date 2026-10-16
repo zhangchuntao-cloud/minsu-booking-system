@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('操作日志')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('log')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('操作日志')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> / <span>操作日志</span>
+        </div>
+
+        <div class="toolbar">
+            <form class="toolbar-filters" action="/admin/log/list" method="get">
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${keyword}" placeholder="操作内容 / 操作人">
+                <button type="submit" class="btn">查询</button>
+                <a href="/admin/log/list" class="btn btn-outline">重置</a>
+            </form>
+            <div style="color:#6b7280;font-size:13px">
+                系统自动记录后台的写操作，便于事后追溯
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th style="width:60px">ID</th>
+                        <th style="width:120px">操作人</th>
+                        <th style="width:170px">操作类型</th>
+                        <th style="width:250px">请求方法</th>
+                        <th>请求参数</th>
+                        <th style="width:120px">IP 地址</th>
+                        <th style="width:90px">耗时</th>
+                        <th style="width:150px">操作时间</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="log : ${page.list}">
+                        <td th:text="${log.id}">1</td>
+                        <td>
+                            <span style="font-weight:600" th:text="${log.username}">用户</span>
+                        </td>
+                        <td>
+                            <span class="badge blue" th:text="${log.operation}">操作</span>
+                        </td>
+                        <td style="font-size:12px;color:#6b7280;font-family:monospace"
+                            th:text="${log.method}">POST /admin/...</td>
+                        <td style="font-size:12px;color:#6b7280;max-width:280px;
+                                   overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                            th:text="${log.params != null} ? ${log.params} : '—'"
+                            th:title="${log.params}">参数</td>
+                        <td style="font-size:12px;color:#6b7280" th:text="${log.ip}">127.0.0.1</td>
+                        <td style="font-size:12px">
+                            <span th:text="${log.costTime} + ' ms'">0 ms</span>
+                        </td>
+                        <td style="font-size:13px;color:#6b7280"
+                            th:text="${#temporals.format(log.creationDate, 'yyyy-MM-dd HH:mm:ss')}">时间</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty" th:if="${page.list.size() == 0}">
+                <div class="empty-icon">📄</div>
+                <div class="empty-text">暂无操作日志</div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/admin :: pagination(${page})}"></div>
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+
+</body>
+</html>

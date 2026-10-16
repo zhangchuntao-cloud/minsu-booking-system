@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('分类管理')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('category')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('分类管理')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> / <span>分类管理</span>
+        </div>
+
+        <div class="toolbar">
+            <div style="color:#6b7280;font-size:13px">
+                分类用于前台首页导航与房源筛选，删除前请先确认该分类下没有房源
+            </div>
+            <a href="/admin/category/edit" class="btn btn-accent">+ 新增分类</a>
+        </div>
+
+        <div class="card">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th style="width:60px">ID</th>
+                        <th style="width:70px">图标</th>
+                        <th style="width:150px">分类名称</th>
+                        <th>分类备注</th>
+                        <th style="width:110px">房源数量</th>
+                        <th style="width:80px">排序</th>
+                        <th style="width:90px">状态</th>
+                        <th style="width:160px">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${categories}">
+                        <td th:text="${c.id}">1</td>
+                        <td style="font-size:22px" th:text="${c.icon}">🏠</td>
+                        <td style="font-weight:600" th:text="${c.categoryName}">分类名</td>
+                        <td style="color:#6b7280;font-size:13px" th:text="${c.categoryNotes}">备注</td>
+                        <td>
+                            <span class="badge blue">
+                                <span th:text="${c.houseCount}">0</span> 套
+                            </span>
+                        </td>
+                        <td th:text="${c.sort}">1</td>
+                        <td>
+                            <span class="badge" th:classappend="${c.status == 1} ? 'green' : 'gray'"
+                                  th:text="${c.status == 1} ? '启用' : '停用'">状态</span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a th:href="@{/admin/category/edit/{id}(id=${c.id})}"
+                                   class="btn btn-sm btn-outline">编辑</a>
+                                <button type="button" class="btn btn-sm btn-outline"
+                                        style="border-color:#dc2626;color:#dc2626"
+                                        data-url="/admin/category/delete"
+                                        th:data-id="${c.id}" 
+                                        data-confirm="删除分类前请确认该分类下已无房源，确定删除吗？"
+                                        data-confirm-text="确定删除">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty" th:if="${categories.size() == 0}">
+                <div class="empty-icon">🏷</div>
+                <div class="empty-text">还没有房源分类</div>
+                <a href="/admin/category/edit" class="btn">新增分类</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+
+</body>
+</html>

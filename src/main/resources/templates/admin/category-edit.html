@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('编辑分类')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('category')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('编辑分类')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> /
+            <a href="/admin/category/list">分类管理</a> /
+            <span th:text="${category.id == null} ? '新增分类' : '编辑分类'">编辑分类</span>
+        </div>
+
+        <div class="alert alert-error" th:if="${error != null}">
+            <span th:text="${error}">错误信息</span>
+        </div>
+
+        <form action="/admin/category/save" method="post" style="max-width:640px">
+            <input type="hidden" name="id" th:value="${category.id}">
+
+            <div class="form-section">
+                <div class="form-section-title">分类信息</div>
+
+                <div class="form-group">
+                    <label class="form-label">分类名称<span class="required">*</span></label>
+                    <input type="text" name="categoryName" class="form-control" maxlength="30"
+                           th:value="${category.categoryName}"
+                           placeholder="如：海景度假"
+                           data-rule="required" data-label="分类名称">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">分类图标</label>
+                    <input type="text" name="icon" class="form-control" maxlength="10"
+                           th:value="${category.icon}" placeholder="填入一个表情符号，如 🌊">
+                    <div class="form-hint">图标会显示在前台首页的分类导航中</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">分类备注</label>
+                    <textarea name="categoryNotes" class="form-control" rows="3" maxlength="100"
+                              th:text="${category.categoryNotes}"
+                              placeholder="简单描述该分类的特点"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">显示顺序</label>
+                        <input type="number" name="sort" class="form-control" min="0"
+                               th:value="${category.sort == null} ? 99 : ${category.sort}">
+                        <div class="form-hint">数字越小越靠前</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">状态</label>
+                        <select name="status" class="form-control">
+                            <option value="1" th:selected="${category.status == null or category.status == 1}">
+                                启用</option>
+                            <option value="0" th:selected="${category.status != null and category.status == 0}">
+                                停用</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-lg"
+                        th:text="${category.id == null} ? '新增分类' : '保存修改'">保存</button>
+                <a href="/admin/category/list" class="btn btn-lg btn-outline">取消</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script>
+    document.querySelector('form[action="/admin/category/save"]').addEventListener('submit', function (e) {
+        if (!Minsu.validateForm(this)) {
+            e.preventDefault();
+        }
+    });
+</script>
+
+</body>
+</html>

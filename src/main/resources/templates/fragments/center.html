@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- 个人中心侧边菜单片段 -->
+<body>
+
+<aside th:fragment="menu(active)" class="side-menu">
+    <a th:href="@{/user/center}" th:classappend="${active == 'center'} ? 'active'">
+        <span>👤</span><span>账户概览</span>
+    </a>
+    <a th:href="@{/order/my}" th:classappend="${active == 'order'} ? 'active'">
+        <span>📋</span><span>我的订单</span>
+    </a>
+    <a th:href="@{/user/favorite}" th:classappend="${active == 'favorite'} ? 'active'">
+        <span>♥</span><span>我的收藏</span>
+    </a>
+    <a th:href="@{/user/review}" th:classappend="${active == 'review'} ? 'active'">
+        <span>💬</span><span>我的评价</span>
+    </a>
+    <a th:href="@{/user/profile}" th:classappend="${active == 'profile'} ? 'active'">
+        <span>⚙</span><span>个人资料</span>
+    </a>
+    <a th:href="@{/user/password}" th:classappend="${active == 'password'} ? 'active'">
+        <span>🔒</span><span>修改密码</span>
+    </a>
+</aside>
+
+</body>
+</html>

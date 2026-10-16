@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('订单详情')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('')}"></header>
+
+<main class="page-main">
+    <div class="container" style="max-width:900px">
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> / <a href="/order/my">我的订单</a> / <span>订单详情</span>
+        </div>
+
+        <!-- 状态提示条 -->
+        <div class="card" style="margin-bottom:18px">
+            <div class="card-body" style="display:flex;align-items:center;justify-content:space-between">
+                <div>
+                    <div style="font-size:20px;font-weight:700">
+                        <span th:text="${order.statusText}">状态</span>
+                    </div>
+                    <div style="color:#6b7280;font-size:13px;margin-top:5px"
+                         th:switch="${order.status}">
+                        <span th:case="0">请尽快完成支付，超时订单将自动取消</span>
+                        <span th:case="1">房东已确认，请按约定时间入住</span>
+                        <span th:case="2">祝您入住愉快</span>
+                        <span th:case="3">订单已完成，欢迎发表评价</span>
+                        <span th:case="4">订单已取消，款项已原路退回</span>
+                    </div>
+                </div>
+                <span class="badge" th:classappend="${order.statusStyle}"
+                      style="font-size:14px;padding:7px 16px"
+                      th:text="${order.statusText}">状态</span>
+            </div>
+        </div>
+
+        <!-- 房源信息 -->
+        <div class="card" style="margin-bottom:18px">
+            <div class="card-header">
+                <div class="card-title">房源信息</div>
+            </div>
+            <div class="card-body" style="display:flex;gap:18px">
+                <a th:href="@{/house/detail/{id}(id=${order.houseId})}">
+                    <img th:src="${order.houseCover}" th:alt="${order.houseTitle}"
+                         style="width:170px;height:120px;object-fit:cover;border-radius:10px">
+                </a>
+                <div style="flex:1">
+                    <a th:href="@{/house/detail/{id}(id=${order.houseId})}"
+                       style="font-size:17px;font-weight:600" th:text="${order.houseTitle}">房源</a>
+                    <div style="color:#6b7280;font-size:13px;margin-top:8px;line-height:2">
+                        <div th:text="'地址：' + ${order.houseCity} + ${order.houseAddress}">地址</div>
+                        <div th:text="'房东：' + ${order.userRealName}">房东</div>
+                        <div th:text="'入住：' + ${#temporals.format(order.checkInDate, 'yyyy年MM月dd日')}
+                                       + ' 至 ' + ${#temporals.format(order.checkOutDate, 'yyyy年MM月dd日')}
+                                       + '（' + ${order.nights} + ' 晚）'">入住时间</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 订单信息 -->
+        <div class="card" style="margin-bottom:18px">
+            <div class="card-header">
+                <div class="card-title">订单信息</div>
+            </div>
+            <div class="card-body">
+                <table class="data-table">
+                    <tbody>
+                    <tr>
+                        <th style="width:130px">订单编号</th>
+                        <td th:text="${order.orderNo}">MS2026...</td>
+                    </tr>
+                    <tr>
+                        <th>下单时间</th>
+                        <td th:text="${#temporals.format(order.creationDate, 'yyyy-MM-dd HH:mm:ss')}">时间</td>
+                    </tr>
+                    <tr>
+                        <th>联系人</th>
+                        <td th:text="${order.contactName} + ' · ' + ${order.contactPhone}">联系人</td>
+                    </tr>
+                    <tr>
+                        <th>入住人数</th>
+                        <td th:text="${order.guestNum} + ' 人'">人数</td>
+                    </tr>
+                    <tr>
+                        <th>支付方式</th>
+                        <td th:text="${order.payTypeText}">支付方式</td>
+                    </tr>
+                    <tr th:if="${order.payTime != null}">
+                        <th>支付时间</th>
+                        <td th:text="${#temporals.format(order.payTime, 'yyyy-MM-dd HH:mm:ss')}">时间</td>
+                    </tr>
+                    <tr th:if="${order.remark != null and order.remark != ''}">
+                        <th>订单备注</th>
+                        <td th:text="${order.remark}">备注</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 费用明细 -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">费用明细</div>
+            </div>
+            <div class="card-body">
+                <div style="display:flex;justify-content:space-between;padding:9px 0;color:#4b5563">
+                    <span th:text="'房费  ¥' + ${order.unitPrice} + ' × ' + ${order.nights} + ' 晚'">房费</span>
+                    <span th:text="'¥' + ${order.totalAmount}">¥0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:9px 0;color:#4b5563">
+                    <span>平台服务费</span>
+                    <span>¥0.00</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:14px 0;
+                            border-top:1px solid #e5e7eb;margin-top:8px">
+                    <span style="font-weight:600">应付总额</span>
+                    <span style="font-size:22px;font-weight:700;color:#dc2626"
+                          th:text="'¥' + ${order.totalAmount}">¥0</span>
+                </div>
+
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+                    <a href="/order/my" class="btn btn-outline">返回列表</a>
+                    <a th:href="@{/house/detail/{id}(id=${order.houseId})}" class="btn">再次预订</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>

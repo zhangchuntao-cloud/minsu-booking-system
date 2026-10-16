@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('评价管理')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('review')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('评价管理')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> / <span>评价管理</span>
+        </div>
+
+        <div class="toolbar">
+            <form class="toolbar-filters" action="/admin/review/list" method="get">
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${keyword}" placeholder="评价内容 / 房源 / 用户">
+                <button type="submit" class="btn">查询</button>
+                <a href="/admin/review/list" class="btn btn-outline">重置</a>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th style="width:170px">房源 / 订单</th>
+                        <th style="width:130px">评价人</th>
+                        <th style="width:110px">评分</th>
+                        <th>评价内容</th>
+                        <th style="width:120px">评价时间</th>
+                        <th style="width:90px">状态</th>
+                        <th style="width:150px">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${page.list}">
+                        <td>
+                            <a th:href="@{/admin/house/view/{id}(id=${r.houseId})}"
+                               style="font-weight:600;font-size:13px" th:text="${r.houseTitle}">房源</a>
+                            <div style="color:#9ca3af;font-size:12px;margin-top:3px"
+                                 th:text="${r.orderNo}">订单号</div>
+                        </td>
+                        <td th:text="${r.userRealName}">用户</td>
+                        <td>
+                            <span class="review-stars" th:text="${r.starText}">★★★★★</span>
+                            <div style="font-size:12px;color:#6b7280"
+                                 th:text="${r.score} + ' 分'">5 分</div>
+                        </td>
+                        <td style="font-size:13px;line-height:1.8">
+                            <div th:text="${r.content}">评价内容</div>
+                            <div th:if="${r.reply != null and r.reply != ''}"
+                                 style="margin-top:7px;padding:7px 10px;background:#ccfbf1;
+                                        border-radius:6px;font-size:12px">
+                                <b style="color:#0f766e">已回复：</b><span th:text="${r.reply}">回复</span>
+                            </div>
+                        </td>
+                        <td style="font-size:13px;color:#6b7280"
+                            th:text="${#temporals.format(r.creationDate, 'yyyy-MM-dd')}">时间</td>
+                        <td>
+                            <span class="badge" th:classappend="${r.status == 1} ? 'green' : 'gray'"
+                                  th:text="${r.status == 1} ? '显示' : '已隐藏'">状态</span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button type="button" class="btn btn-sm"
+                                        data-action="open-modal" data-target="replyModal"
+                                        th:data-field-id="${r.id}"
+                                        th:data-field-title="${r.houseTitle}"
+                                        th:data-field-content="${r.content}">回复</button>
+
+                                <button type="button" class="btn btn-sm btn-outline"
+                                        data-url="/admin/review/status"
+                                        th:data-id="${r.id}" th:data-status="${r.status == 1 ? 0 : 1}" 
+                                        th:text="${r.status == 1} ? '隐藏' : '显示'">隐藏</button>
+
+                                <button type="button" class="btn btn-sm btn-outline"
+                                        style="border-color:#dc2626;color:#dc2626"
+                                        data-url="/admin/review/delete"
+                                        th:data-id="${r.id}" 
+                                        data-confirm="删除后该评价将不可恢复，且房源评分会重新计算，确定删除吗？"
+                                        data-confirm-text="确定删除">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty" th:if="${page.list.size() == 0}">
+                <div class="empty-icon">💬</div>
+                <div class="empty-text">没有找到符合条件的评价</div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/admin :: pagination(${page})}"></div>
+    </div>
+</div>
+
+<!-- ==================== 回复弹窗 ==================== -->
+<div class="modal-mask" id="replyModal">
+    <div class="modal">
+        <div class="modal-head">
+            回复评价
+            <span class="modal-close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="replyReviewId">
+            <div style="color:#6b7280;font-size:13px;margin-bottom:10px">
+                房源：<b id="replyHouseTitle"></b>
+            </div>
+            <div style="background:#f8fafc;border-radius:8px;padding:12px 14px;
+                        font-size:13px;line-height:1.8;color:#4b5563;margin-bottom:16px">
+                <b>住客评价：</b><span id="replyContent"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">回复内容<span class="required">*</span></label>
+                <textarea id="replyText" class="form-control" rows="4" maxlength="500"
+                          placeholder="回复会展示在评价下方，请注意措辞"></textarea>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn-outline modal-close">取消</button>
+            <button type="button" class="btn" id="replySubmit">提交回复</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-action="open-modal"][data-target="replyModal"]')
+            .forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    document.getElementById('replyReviewId').value = btn.dataset.fieldId;
+                    document.getElementById('replyHouseTitle').textContent = btn.dataset.fieldTitle;
+                    document.getElementById('replyContent').textContent = btn.dataset.fieldContent;
+                    document.getElementById('replyText').value = '';
+                });
+            });
+
+        document.getElementById('replySubmit').addEventListener('click', function () {
+            var text = document.getElementById('replyText').value.trim();
+            if (!text) {
+                Minsu.toast('请填写回复内容', 'error');
+                return;
+            }
+            var btn = this;
+            btn.disabled = true;
+            Minsu.post('/admin/review/reply', {
+                id: document.getElementById('replyReviewId').value,
+                reply: text
+            }).then(function (result) {
+                Minsu.toast(result.msg, 'success');
+                setTimeout(function () {
+                    window.location.reload();
+                }, 900);
+            }).catch(function () {
+                btn.disabled = false;
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

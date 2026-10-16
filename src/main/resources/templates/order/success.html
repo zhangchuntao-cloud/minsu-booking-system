@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('下单成功')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('')}"></header>
+
+<main class="page-main">
+    <div class="container" style="max-width:720px">
+
+        <div class="card">
+            <div class="card-body" style="text-align:center;padding:38px 30px">
+                <div style="font-size:56px;color:#16a34a;line-height:1">✓</div>
+                <h1 style="font-size:24px;margin:16px 0 8px">订单提交成功</h1>
+                <p style="color:#6b7280">
+                    请在 30 分钟内完成支付，超时订单将自动取消
+                </p>
+
+                <div style="background:#f8fafc;border-radius:12px;padding:20px;margin:24px 0;text-align:left">
+                    <div style="display:flex;justify-content:space-between;padding:7px 0">
+                        <span style="color:#6b7280">订单编号</span>
+                        <span style="font-weight:600" th:text="${order.orderNo}">MS2026...</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:7px 0">
+                        <span style="color:#6b7280">房源</span>
+                        <span style="font-weight:600" th:text="${order.houseTitle}">房源</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:7px 0">
+                        <span style="color:#6b7280">入住日期</span>
+                        <span th:text="${#temporals.format(order.checkInDate, 'yyyy-MM-dd')}">入住</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:7px 0">
+                        <span style="color:#6b7280">退房日期</span>
+                        <span th:text="${#temporals.format(order.checkOutDate, 'yyyy-MM-dd')}">退房</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:7px 0">
+                        <span style="color:#6b7280">入住晚数</span>
+                        <span th:text="${order.nights} + ' 晚'">晚数</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:12px 0 0;
+                                border-top:1px dashed #e5e7eb;margin-top:8px">
+                        <span style="font-weight:600">应付金额</span>
+                        <span style="font-size:22px;font-weight:700;color:#dc2626"
+                              th:text="'¥' + ${order.totalAmount}">¥0</span>
+                    </div>
+                </div>
+
+                <!-- 支付方式选择 -->
+                <div style="text-align:left;margin-bottom:20px">
+                    <div style="font-weight:600;margin-bottom:12px">选择支付方式</div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <label class="facility-item" style="cursor:pointer;display:flex;align-items:center;gap:10px">
+                            <input type="radio" name="payType" value="1">
+                            余额支付（当前余额 ¥<span th:text="${session.loginUser.balance}">0</span>）
+                        </label>
+                        <label class="facility-item" style="cursor:pointer;display:flex;align-items:center;gap:10px">
+                            <input type="radio" name="payType" value="2" checked> 支付宝
+                        </label>
+                        <label class="facility-item" style="cursor:pointer;display:flex;align-items:center;gap:10px">
+                            <input type="radio" name="payType" value="3"> 微信支付
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;justify-content:center">
+                    <a href="/order/my" class="btn btn-outline">稍后支付</a>
+                    <button type="button" class="btn btn-lg" id="payNowBtn">立即支付</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:inline="javascript">
+    var orderNo = /*[[${order.orderNo}]]*/ '';
+
+    document.getElementById('payNowBtn').addEventListener('click', function () {
+        var payType = document.querySelector('input[name="payType"]:checked').value;
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '支付中…';
+
+        Minsu.post('/order/pay', {orderNo: orderNo, payType: payType})
+            .then(function (result) {
+                Minsu.toast(result.msg, 'success');
+                setTimeout(function () {
+                    window.location.href = '/order/detail/' + orderNo;
+                }, 1000);
+            })
+            .catch(function () {
+                btn.disabled = false;
+                btn.textContent = '立即支付';
+            });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.code.web_homework.mapper.UserMapper">
+
+    <!-- 用户表结果映射 -->
+    <resultMap id="BaseResultMap" type="User">
+        <id     column="id"            property="id"/>
+        <result column="username"      property="username"/>
+        <result column="password"      property="password"/>
+        <result column="real_name"     property="realName"/>
+        <result column="gender"        property="gender"/>
+        <result column="birthday"      property="birthday"/>
+        <result column="phone"         property="phone"/>
+        <result column="email"         property="email"/>
+        <result column="avatar"        property="avatar"/>
+        <result column="id_card"       property="idCard"/>
+        <result column="balance"       property="balance"/>
+        <result column="role_code"     property="roleCode"/>
+        <result column="status"        property="status"/>
+        <result column="created_by"    property="createdBy"/>
+        <result column="creation_date" property="creationDate"/>
+        <result column="modify_by"     property="modifyBy"/>
+        <result column="modify_date"   property="modifyDate"/>
+        <result column="role_name"     property="roleName"/>
+    </resultMap>
+
+    <!-- 公共字段列表，供多个语句复用，避免重复书写 -->
+    <sql id="Base_Column_List">
+        id, username, password, real_name, gender, birthday, phone, email,
+        avatar, id_card, balance, role_code, status,
+        created_by, creation_date, modify_by, modify_date
+    </sql>
+
+    <!-- 根据主键查询 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM sys_user
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据账号查询，登录校验使用；利用 uk_username 唯一索引，查询效率高 -->
+    <select id="selectByUsername" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM sys_user
+        WHERE username = #{username}
+    </select>
+
+    <!-- 条件分页查询：动态 SQL 按需拼接筛选条件 -->
+    <select id="selectByQuery" resultMap="BaseResultMap">
+        SELECT u.id, u.username, u.password, u.real_name, u.gender, u.birthday,
+               u.phone, u.email, u.avatar, u.id_card, u.balance, u.role_code,
+               u.status, u.created_by, u.creation_date, u.modify_by, u.modify_date,
+               r.role_name
+        FROM sys_user u
+        LEFT JOIN sys_role r ON u.role_code = r.role_code
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (u.username LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.real_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="roleCode != null and roleCode != ''">
+                AND u.role_code = #{roleCode}
+            </if>
+            <if test="status != null">
+                AND u.status = #{status}
+            </if>
+        </where>
+        ORDER BY u.id ASC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 与列表查询共用同一套筛选条件，保证总数与列表一致 -->
+    <select id="countByQuery" resultType="long">
+        SELECT COUNT(1)
+        FROM sys_user u
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (u.username LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.real_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="roleCode != null and roleCode != ''">
+                AND u.role_code = #{roleCode}
+            </if>
+            <if test="status != null">
+                AND u.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- 查询全部启用中的房东 -->
+    <select id="selectHosts" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM sys_user
+        WHERE role_code = 'HOST' AND status = 1
+        ORDER BY id ASC
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(1) FROM sys_user
+    </select>
+
+    <select id="countByRoleCode" resultType="int">
+        SELECT COUNT(1) FROM sys_user WHERE role_code = #{roleCode}
+    </select>
+
+    <!-- 新增用户：useGeneratedKeys 回填自增主键，便于后续关联插入 -->
+    <insert id="insert" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_user
+            (username, password, real_name, gender, birthday, phone, email,
+             avatar, id_card, balance, role_code, status, created_by, creation_date)
+        VALUES
+            (#{username}, #{password}, #{realName}, #{gender}, #{birthday}, #{phone}, #{email},
+             #{avatar}, #{idCard}, #{balance}, #{roleCode}, #{status}, #{createdBy}, NOW())
+    </insert>
+
+    <!-- 更新用户：set 标签自动去掉末尾多余的逗号，只更新非空字段 -->
+    <update id="update" parameterType="User">
+        UPDATE sys_user
+        <set>
+            <if test="realName != null">real_name = #{realName},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="idCard != null">id_card = #{idCard},</if>
+            <if test="roleCode != null">role_code = #{roleCode},</if>
+            <if test="status != null">status = #{status},</if>
+            modify_by = #{modifyBy},
+            modify_date = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE sys_user SET password = #{password}, modify_date = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE sys_user SET status = #{status}, modify_date = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="updateBalance">
+        UPDATE sys_user SET balance = #{balance}, modify_date = NOW() WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM sys_user WHERE id = #{id}
+    </delete>
+
+</mapper>

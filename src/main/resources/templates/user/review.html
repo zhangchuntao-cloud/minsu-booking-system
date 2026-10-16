@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('我的评价')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('')}"></header>
+
+<main class="page-main">
+    <div class="container">
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> / <a href="/user/center">个人中心</a> / <span>我的评价</span>
+        </div>
+
+        <div class="center-layout">
+            <div th:replace="~{fragments/center :: menu('review')}"></div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        我的评价（<span th:text="${reviews.size()}">0</span>）
+                    </div>
+                </div>
+                <div class="card-body" style="padding-top:6px">
+                    <div class="empty" th:if="${reviews.size() == 0}">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-text">还没有发表过评价，完成订单后即可评价</div>
+                        <a href="/order/my?status=3" class="btn">查看可评价订单</a>
+                    </div>
+
+                    <div class="review-item" th:each="r : ${reviews}">
+                        <div class="review-avatar"
+                             th:text="${#strings.substring(r.userRealName, 0, 1)}">用</div>
+                        <div style="flex:1;min-width:0">
+                            <div class="review-head">
+                                <div>
+                                    <a th:href="@{/house/detail/{id}(id=${r.houseId})}"
+                                       class="review-name" th:text="${r.houseTitle}">房源</a>
+                                    <span class="review-stars" style="margin-left:8px"
+                                          th:text="${r.starText}">★★★★★</span>
+                                </div>
+                                <span class="review-time"
+                                      th:text="${#temporals.format(r.creationDate, 'yyyy-MM-dd HH:mm')}">时间</span>
+                            </div>
+                            <div class="review-content" th:text="${r.content}">内容</div>
+                            <div class="review-reply" th:if="${r.reply != null and r.reply != ''}">
+                                <strong>房东回复：</strong><span th:text="${r.reply}">回复</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>

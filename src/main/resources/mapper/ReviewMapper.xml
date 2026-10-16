@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.code.web_homework.mapper.ReviewMapper">
+
+    <resultMap id="BaseResultMap" type="Review">
+        <id     column="id"            property="id"/>
+        <result column="order_id"      property="orderId"/>
+        <result column="house_id"      property="houseId"/>
+        <result column="user_id"       property="userId"/>
+        <result column="score"         property="score"/>
+        <result column="content"       property="content"/>
+        <result column="reply"         property="reply"/>
+        <result column="reply_time"    property="replyTime"/>
+        <result column="status"        property="status"/>
+        <result column="created_by"    property="createdBy"/>
+        <result column="creation_date" property="creationDate"/>
+        <result column="modify_by"     property="modifyBy"/>
+        <result column="modify_date"   property="modifyDate"/>
+        <!-- 关联查询带出的字段 -->
+        <result column="user_real_name" property="userRealName"/>
+        <result column="user_avatar"    property="userAvatar"/>
+        <result column="house_title"    property="houseTitle"/>
+        <result column="order_no"       property="orderNo"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        r.id, r.order_id, r.house_id, r.user_id, r.score, r.content, r.reply,
+        r.reply_time, r.status, r.created_by, r.creation_date, r.modify_by, r.modify_date
+    </sql>
+
+    <!-- 关联用户表与房源表，带出评价人姓名、头像与房源标题 -->
+    <sql id="Join_Column_List">
+        u.real_name AS user_real_name,
+        u.avatar    AS user_avatar,
+        h.title     AS house_title,
+        o.order_no  AS order_no
+    </sql>
+
+    <select id="selectByHouseId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, <include refid="Join_Column_List"/>
+        FROM review r
+        LEFT JOIN sys_user u       ON r.user_id = u.id
+        LEFT JOIN house h          ON r.house_id = h.id
+        LEFT JOIN booking_order o  ON r.order_id = o.id
+        WHERE r.house_id = #{houseId} AND r.status = 1
+        ORDER BY r.creation_date DESC
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, <include refid="Join_Column_List"/>
+        FROM review r
+        LEFT JOIN sys_user u       ON r.user_id = u.id
+        LEFT JOIN house h          ON r.house_id = h.id
+        LEFT JOIN booking_order o  ON r.order_id = o.id
+        WHERE r.user_id = #{userId}
+        ORDER BY r.creation_date DESC
+    </select>
+
+    <!-- 后台评价列表：支持按房源、房东、关键字筛选 -->
+    <select id="selectByQuery" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, <include refid="Join_Column_List"/>
+        FROM review r
+        LEFT JOIN sys_user u       ON r.user_id = u.id
+        LEFT JOIN house h          ON r.house_id = h.id
+        LEFT JOIN booking_order o  ON r.order_id = o.id
+        <where>
+            <if test="houseId != null">
+                AND r.house_id = #{houseId}
+            </if>
+            <if test="hostId != null">
+                AND h.host_id = #{hostId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (r.content LIKE CONCAT('%', #{keyword}, '%')
+                     OR h.title LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.real_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY r.creation_date DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByQuery" resultType="long">
+        SELECT COUNT(1)
+        FROM review r
+        LEFT JOIN sys_user u ON r.user_id = u.id
+        LEFT JOIN house h    ON r.house_id = h.id
+        <where>
+            <if test="houseId != null">
+                AND r.house_id = #{houseId}
+            </if>
+            <if test="hostId != null">
+                AND h.host_id = #{hostId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (r.content LIKE CONCAT('%', #{keyword}, '%')
+                     OR h.title LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.real_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM review r
+        WHERE r.id = #{id}
+    </select>
+
+    <select id="selectByOrderId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM review r
+        WHERE r.order_id = #{orderId}
+    </select>
+
+    <insert id="insert" parameterType="Review" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO review
+            (order_id, house_id, user_id, score, content, status, created_by, creation_date)
+        VALUES
+            (#{orderId}, #{houseId}, #{userId}, #{score}, #{content}, #{status}, #{createdBy}, NOW())
+    </insert>
+
+    <update id="reply">
+        UPDATE review
+        SET reply = #{reply}, reply_time = NOW(), modify_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE review SET status = #{status}, modify_date = NOW() WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM review WHERE id = #{id}
+    </delete>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(1) FROM review
+    </select>
+
+    <select id="countByHouseId" resultType="int">
+        SELECT COUNT(1) FROM review WHERE house_id = #{houseId} AND status = 1
+    </select>
+
+    <select id="avgScoreByHouseId" resultType="java.math.BigDecimal">
+        SELECT IFNULL(ROUND(AVG(score), 1), 5.0)
+        FROM review
+        WHERE house_id = #{houseId} AND status = 1
+    </select>
+
+    <select id="avgScoreAll" resultType="java.math.BigDecimal">
+        SELECT IFNULL(ROUND(AVG(score), 1), 0)
+        FROM review
+        WHERE status = 1
+    </select>
+
+    <!-- 评分分布统计，用于后台评分分布柱状图 -->
+    <select id="countGroupByScore" resultType="java.util.Map">
+        SELECT score AS name, COUNT(1) AS value
+        FROM review
+        WHERE status = 1
+        GROUP BY score
+        ORDER BY score DESC
+    </select>
+
+</mapper>

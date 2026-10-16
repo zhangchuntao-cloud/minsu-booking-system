@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.code.web_homework.mapper.HouseMapper">
+
+    <resultMap id="BaseResultMap" type="House">
+        <id     column="id"            property="id"/>
+        <result column="house_no"      property="houseNo"/>
+        <result column="title"         property="title"/>
+        <result column="host_id"       property="hostId"/>
+        <result column="category_id"   property="categoryId"/>
+        <result column="cover_img"     property="coverImg"/>
+        <result column="province"      property="province"/>
+        <result column="city"          property="city"/>
+        <result column="district"      property="district"/>
+        <result column="address"       property="address"/>
+        <result column="price"         property="price"/>
+        <result column="area"          property="area"/>
+        <result column="bedroom"       property="bedroom"/>
+        <result column="living_room"   property="livingRoom"/>
+        <result column="bathroom"      property="bathroom"/>
+        <result column="bed_count"     property="bedCount"/>
+        <result column="max_guest"     property="maxGuest"/>
+        <result column="floor_desc"    property="floorDesc"/>
+        <result column="facilities"    property="facilities"/>
+        <result column="description"   property="description"/>
+        <result column="score"         property="score"/>
+        <result column="view_count"    property="viewCount"/>
+        <result column="order_count"   property="orderCount"/>
+        <result column="status"        property="status"/>
+        <result column="audit_remark"  property="auditRemark"/>
+        <result column="created_by"    property="createdBy"/>
+        <result column="creation_date" property="creationDate"/>
+        <result column="modify_by"     property="modifyBy"/>
+        <result column="modify_date"   property="modifyDate"/>
+        <!-- 关联查询带出的字段 -->
+        <result column="category_name" property="categoryName"/>
+        <result column="host_name"     property="hostName"/>
+        <result column="host_phone"    property="hostPhone"/>
+        <result column="review_count"  property="reviewCount"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        h.id, h.house_no, h.title, h.host_id, h.category_id, h.cover_img,
+        h.province, h.city, h.district, h.address, h.price, h.area,
+        h.bedroom, h.living_room, h.bathroom, h.bed_count, h.max_guest,
+        h.floor_desc, h.facilities, h.description, h.score,
+        h.view_count, h.order_count, h.status, h.audit_remark,
+        h.created_by, h.creation_date, h.modify_by, h.modify_date
+    </sql>
+
+    <!-- 详情查询：关联分类表与用户表，一次性带出分类名与房东信息，避免多次查询 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.category_name,
+               u.real_name AS host_name,
+               u.phone     AS host_phone,
+               (SELECT COUNT(1) FROM review rv WHERE rv.house_id = h.id AND rv.status = 1) AS review_count
+        FROM house h
+        LEFT JOIN house_category c ON h.category_id = c.id
+        LEFT JOIN sys_user u       ON h.host_id = u.id
+        WHERE h.id = #{id}
+    </select>
+
+    <!--
+      列表查询：动态 SQL 组合筛选条件。
+      排序字段使用 choose 分支写死，而不是直接拼接前端传来的字符串，
+      从根本上杜绝 ORDER BY 注入风险。
+    -->
+    <select id="selectByQuery" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.category_name,
+               u.real_name AS host_name,
+               u.phone     AS host_phone
+        FROM house h
+        LEFT JOIN house_category c ON h.category_id = c.id
+        LEFT JOIN sys_user u       ON h.host_id = u.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (h.title LIKE CONCAT('%', #{keyword}, '%')
+                     OR h.address LIKE CONCAT('%', #{keyword}, '%')
+                     OR h.city LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                AND h.category_id = #{categoryId}
+            </if>
+            <if test="city != null and city != ''">
+                AND h.city = #{city}
+            </if>
+            <if test="minPrice != null">
+                AND h.price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND h.price &lt;= #{maxPrice}
+            </if>
+            <if test="guestNum != null">
+                AND h.max_guest &gt;= #{guestNum}
+            </if>
+            <if test="status != null">
+                AND h.status = #{status}
+            </if>
+            <if test="hostId != null">
+                AND h.host_id = #{hostId}
+            </if>
+        </where>
+        <choose>
+            <when test="sortBy == 'priceAsc'">ORDER BY h.price ASC</when>
+            <when test="sortBy == 'priceDesc'">ORDER BY h.price DESC</when>
+            <when test="sortBy == 'scoreDesc'">ORDER BY h.score DESC, h.order_count DESC</when>
+            <when test="sortBy == 'hotDesc'">ORDER BY h.order_count DESC</when>
+            <otherwise>ORDER BY h.creation_date DESC, h.id DESC</otherwise>
+        </choose>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByQuery" resultType="long">
+        SELECT COUNT(1)
+        FROM house h
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (h.title LIKE CONCAT('%', #{keyword}, '%')
+                     OR h.address LIKE CONCAT('%', #{keyword}, '%')
+                     OR h.city LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                AND h.category_id = #{categoryId}
+            </if>
+            <if test="city != null and city != ''">
+                AND h.city = #{city}
+            </if>
+            <if test="minPrice != null">
+                AND h.price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND h.price &lt;= #{maxPrice}
+            </if>
+            <if test="guestNum != null">
+                AND h.max_guest &gt;= #{guestNum}
+            </if>
+            <if test="status != null">
+                AND h.status = #{status}
+            </if>
+            <if test="hostId != null">
+                AND h.host_id = #{hostId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 热门房源：命中 idx_status_price 组合索引 -->
+    <select id="selectHotHouses" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.category_name, u.real_name AS host_name
+        FROM house h
+        LEFT JOIN house_category c ON h.category_id = c.id
+        LEFT JOIN sys_user u       ON h.host_id = u.id
+        WHERE h.status = 1
+        ORDER BY h.order_count DESC, h.score DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectLatestHouses" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.category_name, u.real_name AS host_name
+        FROM house h
+        LEFT JOIN house_category c ON h.category_id = c.id
+        LEFT JOIN sys_user u       ON h.host_id = u.id
+        WHERE h.status = 1
+        ORDER BY h.creation_date DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectByHostId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.category_name, u.real_name AS host_name
+        FROM house h
+        LEFT JOIN house_category c ON h.category_id = c.id
+        LEFT JOIN sys_user u       ON h.host_id = u.id
+        WHERE h.host_id = #{hostId}
+        ORDER BY h.creation_date DESC
+    </select>
+
+    <insert id="insert" parameterType="House" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO house
+            (house_no, title, host_id, category_id, cover_img, province, city, district,
+             address, price, area, bedroom, living_room, bathroom, bed_count, max_guest,
+             floor_desc, facilities, description, score, view_count, order_count,
+             status, audit_remark, created_by, creation_date)
+        VALUES
+            (#{houseNo}, #{title}, #{hostId}, #{categoryId}, #{coverImg}, #{province}, #{city}, #{district},
+             #{address}, #{price}, #{area}, #{bedroom}, #{livingRoom}, #{bathroom}, #{bedCount}, #{maxGuest},
+             #{floorDesc}, #{facilities}, #{description}, #{score}, #{viewCount}, #{orderCount},
+             #{status}, #{auditRemark}, #{createdBy}, NOW())
+    </insert>
+
+    <update id="update" parameterType="House">
+        UPDATE house
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="coverImg != null">cover_img = #{coverImg},</if>
+            <if test="province != null">province = #{province},</if>
+            <if test="city != null">city = #{city},</if>
+            <if test="district != null">district = #{district},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="area != null">area = #{area},</if>
+            <if test="bedroom != null">bedroom = #{bedroom},</if>
+            <if test="livingRoom != null">living_room = #{livingRoom},</if>
+            <if test="bathroom != null">bathroom = #{bathroom},</if>
+            <if test="bedCount != null">bed_count = #{bedCount},</if>
+            <if test="maxGuest != null">max_guest = #{maxGuest},</if>
+            <if test="floorDesc != null">floor_desc = #{floorDesc},</if>
+            <if test="facilities != null">facilities = #{facilities},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="auditRemark != null">audit_remark = #{auditRemark},</if>
+            modify_by = #{modifyBy},
+            modify_date = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE house
+        SET status = #{status},
+            audit_remark = #{auditRemark},
+            modify_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="increaseViewCount">
+        UPDATE house SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <update id="increaseOrderCount">
+        UPDATE house SET order_count = order_count + 1 WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM house WHERE id = #{id}
+    </delete>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(1) FROM house
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(1) FROM house WHERE status = #{status}
+    </select>
+
+    <select id="countGroupByCategory" resultType="java.util.Map">
+        SELECT c.category_name AS name, COUNT(h.id) AS value
+        FROM house_category c
+        LEFT JOIN house h ON c.id = h.category_id AND h.status = 1
+        GROUP BY c.id, c.category_name
+        ORDER BY value DESC
+    </select>
+
+    <select id="countGroupByCity" resultType="java.util.Map">
+        SELECT h.city AS name, COUNT(1) AS value
+        FROM house h
+        WHERE h.status = 1
+        GROUP BY h.city
+        ORDER BY value DESC, h.city ASC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

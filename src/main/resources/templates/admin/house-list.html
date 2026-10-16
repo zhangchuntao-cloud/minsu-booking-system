@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('房源管理')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('house')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('房源管理')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> / <span>房源管理</span>
+        </div>
+
+        <!-- 筛选与操作工具条 -->
+        <div class="toolbar">
+            <form class="toolbar-filters" action="/admin/house/list" method="get">
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${query.keyword}" placeholder="房源标题 / 城市 / 地址">
+                <select name="categoryId" class="form-control">
+                    <option value="">全部分类</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}"
+                            th:text="${c.categoryName}"
+                            th:selected="${query.categoryId != null and query.categoryId == c.id}">分类</option>
+                </select>
+                <select name="status" class="form-control">
+                    <option value="">全部状态</option>
+                    <option value="0" th:selected="${query.status != null and query.status == 0}">待审核</option>
+                    <option value="1" th:selected="${query.status != null and query.status == 1}">已上架</option>
+                    <option value="2" th:selected="${query.status != null and query.status == 2}">已下架</option>
+                    <option value="3" th:selected="${query.status != null and query.status == 3}">审核驳回</option>
+                </select>
+                <button type="submit" class="btn">查询</button>
+                <a href="/admin/house/list" class="btn btn-outline">重置</a>
+            </form>
+            <a href="/admin/house/edit" class="btn btn-accent">+ 发布房源</a>
+        </div>
+
+        <!-- 房源表格 -->
+        <div class="card">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th style="width:70px">封面</th>
+                        <th>房源信息</th>
+                        <th style="width:100px">分类</th>
+                        <th style="width:110px">房东</th>
+                        <th style="width:100px">价格</th>
+                        <th style="width:100px">数据</th>
+                        <th style="width:90px">状态</th>
+                        <th style="width:210px">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="h : ${page.list}">
+                        <td>
+                            <img th:src="${h.coverImg}" th:alt="${h.title}"
+                                 style="width:60px;height:44px;object-fit:cover;border-radius:6px">
+                        </td>
+                        <td>
+                            <a th:href="@{/admin/house/view/{id}(id=${h.id})}"
+                               style="font-weight:600" th:text="${h.title}">房源标题</a>
+                            <div style="color:#9ca3af;font-size:12px;margin-top:3px">
+                                <span th:text="${h.houseNo}">编号</span> ·
+                                <span th:text="${h.city} + ${h.district}">城市</span> ·
+                                <span th:text="${h.layoutText}">户型</span>
+                            </div>
+                        </td>
+                        <td th:text="${h.categoryName}">分类</td>
+                        <td th:text="${h.hostName}">房东</td>
+                        <td>
+                            <span style="color:#dc2626;font-weight:600" th:text="'¥' + ${h.price}">¥0</span>
+                            <div style="color:#9ca3af;font-size:12px">/ 晚</div>
+                        </td>
+                        <td style="font-size:12px;color:#6b7280">
+                            <div th:text="'浏览 ' + ${h.viewCount}">浏览</div>
+                            <div th:text="'预订 ' + ${h.orderCount}">预订</div>
+                        </td>
+                        <td>
+                            <span class="badge" th:classappend="${h.statusStyle}"
+                                  th:text="${h.statusText}">状态</span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <!-- 待审核：显示审核入口 -->
+                                <button th:if="${h.status == 0 and loginUser.admin}" type="button"
+                                        class="btn btn-sm btn-accent"
+                                        data-action="open-modal" data-target="auditModal"
+                                        th:data-field-id="${h.id}"
+                                        th:data-field-title="${h.title}">审核</button>
+
+                                <a th:href="@{/admin/house/edit/{id}(id=${h.id})}"
+                                   class="btn btn-sm btn-outline">编辑</a>
+
+                                <!-- 已上架可下架，已下架可上架 -->
+                                <button th:if="${h.status == 1}" type="button"
+                                        class="btn btn-sm btn-outline"
+                                        data-url="/admin/house/status"
+                                        th:data-id="${h.id}" data-status="2" 
+                                        data-confirm="确定要下架该房源吗？下架后前台将不再展示。">下架</button>
+                                <button th:if="${h.status == 2}" type="button"
+                                        class="btn btn-sm btn-outline"
+                                        data-url="/admin/house/status"
+                                        th:data-id="${h.id}" data-status="1" >上架</button>
+
+                                <button type="button" class="btn btn-sm btn-outline"
+                                        style="border-color:#dc2626;color:#dc2626"
+                                        data-url="/admin/house/delete"
+                                        th:data-id="${h.id}" 
+                                        data-confirm="删除后该房源的图片与关联数据将一并移除，且不可恢复。确定删除吗？"
+                                        data-confirm-text="确定删除">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty" th:if="${page.list.size() == 0}">
+                <div class="empty-icon">🏠</div>
+                <div class="empty-text">没有找到符合条件的房源</div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/admin :: pagination(${page})}"></div>
+    </div>
+</div>
+
+<!-- ==================== 审核弹窗 ==================== -->
+<div class="modal-mask" id="auditModal">
+    <div class="modal">
+        <div class="modal-head">
+            房源审核
+            <span class="modal-close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="auditHouseId">
+            <div style="color:#6b7280;font-size:13px;margin-bottom:16px">
+                房源：<b id="auditHouseTitle"></b>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">审核结果<span class="required">*</span></label>
+                <div style="display:flex;gap:10px">
+                    <label class="facility-item" style="cursor:pointer;flex:1;text-align:center">
+                        <input type="radio" name="auditStatus" value="1" checked> 通过并上架
+                    </label>
+                    <label class="facility-item" style="cursor:pointer;flex:1;text-align:center">
+                        <input type="radio" name="auditStatus" value="3"> 驳回
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">审核意见</label>
+                <textarea id="auditRemark" class="form-control" rows="3"
+                          placeholder="驳回时必填，将展示给房东"></textarea>
+                <div class="form-hint">通过时可不填，驳回时必须说明原因</div>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn-outline modal-close">取消</button>
+            <button type="button" class="btn" id="auditSubmit">提交审核</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script>
+    /* 审核弹窗：打开时回填房源信息，提交时调用审核接口 */
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-action="open-modal"][data-target="auditModal"]')
+            .forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    document.getElementById('auditHouseId').value = btn.dataset.fieldId;
+                    document.getElementById('auditHouseTitle').textContent = btn.dataset.fieldTitle;
+                    document.getElementById('auditRemark').value = '';
+                    document.querySelector('input[name="auditStatus"][value="1"]').checked = true;
+                });
+            });
+
+        document.getElementById('auditSubmit').addEventListener('click', function () {
+            var status = document.querySelector('input[name="auditStatus"]:checked').value;
+            var remark = document.getElementById('auditRemark').value.trim();
+            if (status === '3' && !remark) {
+                Minsu.toast('驳回房源时必须填写审核意见', 'error');
+                return;
+            }
+            var btn = this;
+            btn.disabled = true;
+            Minsu.post('/admin/house/audit', {
+                id: document.getElementById('auditHouseId').value,
+                status: status,
+                auditRemark: remark
+            }).then(function (result) {
+                Minsu.toast(result.msg, 'success');
+                setTimeout(function () {
+                    window.location.reload();
+                }, 900);
+            }).catch(function () {
+                btn.disabled = false;
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

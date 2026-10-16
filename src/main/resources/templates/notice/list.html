@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('平台公告')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('notice')}"></header>
+
+<main class="page-main">
+    <div class="container" style="max-width:880px">
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> / <span>平台公告</span>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">平台公告</div>
+                <span style="color:#6b7280;font-size:13px">
+                    共 <span th:text="${notices.size()}">0</span> 条
+                </span>
+            </div>
+            <div class="card-body" style="padding-top:8px">
+                <a th:each="n : ${notices}" th:href="@{/notice/detail/{id}(id=${n.id})}" class="notice-item">
+                    <div class="notice-date">
+                        <div class="notice-day" th:text="${#temporals.day(n.publishTime)}">01</div>
+                        <div class="notice-month"
+                             th:text="${#temporals.month(n.publishTime)} + '月'">1月</div>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
+                            <span class="notice-title" th:text="${n.title}">标题</span>
+                            <span class="badge" th:classappend="${n.typeStyle}"
+                                  th:text="${n.typeText}">类型</span>
+                        </div>
+                        <div class="notice-summary" th:text="${n.summary}">摘要</div>
+                        <div style="color:#9ca3af;font-size:12px;margin-top:6px">
+                            <span th:text="'浏览 ' + ${n.viewCount}">浏览</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('我的收藏')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('')}"></header>
+
+<main class="page-main">
+    <div class="container">
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> / <a href="/user/center">个人中心</a> / <span>我的收藏</span>
+        </div>
+
+        <div class="center-layout">
+            <div th:replace="~{fragments/center :: menu('favorite')}"></div>
+
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            我的收藏（<span th:text="${favorites.size()}">0</span>）
+                        </div>
+                        <a href="/house/list" class="section-more" style="font-size:13px">发现更多房源 →</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="empty" th:if="${favorites.size() == 0}">
+                            <div class="empty-icon">♡</div>
+                            <div class="empty-text">还没有收藏任何房源</div>
+                            <a href="/house/list" class="btn">去逛逛</a>
+                        </div>
+
+                        <div class="house-grid" style="grid-template-columns:repeat(2,1fr)"
+                             th:if="${favorites.size() > 0}">
+                            <div th:each="f : ${favorites}" class="house-card">
+                                <a th:href="@{/house/detail/{id}(id=${f.houseId})}" class="house-cover"
+                                   style="display:block;height:170px">
+                                    <img th:src="${f.houseCover}" th:alt="${f.houseTitle}" loading="lazy">
+                                    <span class="house-score" th:text="'★ ' + ${f.houseScore}">★ 5.0</span>
+                                </a>
+                                <div class="house-info">
+                                    <a th:href="@{/house/detail/{id}(id=${f.houseId})}"
+                                       class="house-name" th:text="${f.houseTitle}">房源</a>
+                                    <div class="house-loc">
+                                        <span>📍</span><span th:text="${f.houseCity}">城市</span>
+                                    </div>
+                                    <div class="house-foot">
+                                        <div class="price" th:text="'¥' + ${f.housePrice}">
+                                            ¥688<small>/晚</small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline"
+                                                data-action="favorite" th:data-house-id="${f.houseId}"
+                                                style="border-color:#dc2626;color:#dc2626">
+                                            取消收藏
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script>
+    /* 收藏页取消收藏后需要刷新页面，让列表同步更新 */
+    document.querySelectorAll('[data-action="favorite"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            setTimeout(function () {
+                window.location.reload();
+            }, 900);
+        });
+    });
+</script>
+
+</body>
+</html>

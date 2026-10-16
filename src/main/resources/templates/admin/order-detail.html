@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('订单详情')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('order')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('订单详情')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> /
+            <a href="/admin/order/list">订单管理</a> /
+            <span th:text="${order.orderNo}">订单</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start">
+
+            <div>
+                <!-- 订单基本信息 -->
+                <div class="card" style="margin-bottom:18px">
+                    <div class="card-header">
+                        <div class="card-title">订单信息</div>
+                        <span class="badge" th:classappend="${order.statusStyle}"
+                              th:text="${order.statusText}">状态</span>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <tbody>
+                            <tr>
+                                <th style="width:120px">订单编号</th>
+                                <td th:text="${order.orderNo}">编号</td>
+                                <th style="width:120px">下单时间</th>
+                                <td th:text="${#temporals.format(order.creationDate, 'yyyy-MM-dd HH:mm:ss')}">时间</td>
+                            </tr>
+                            <tr>
+                                <th>下单用户</th>
+                                <td th:text="${order.userRealName} + '（' + ${order.username} + '）'">用户</td>
+                                <th>联系电话</th>
+                                <td th:text="${order.contactPhone}">电话</td>
+                            </tr>
+                            <tr>
+                                <th>入住日期</th>
+                                <td th:text="${#temporals.format(order.checkInDate, 'yyyy-MM-dd')}">入住</td>
+                                <th>退房日期</th>
+                                <td th:text="${#temporals.format(order.checkOutDate, 'yyyy-MM-dd')}">退房</td>
+                            </tr>
+                            <tr>
+                                <th>入住晚数</th>
+                                <td th:text="${order.nights} + ' 晚'">晚数</td>
+                                <th>入住人数</th>
+                                <td th:text="${order.guestNum} + ' 人'">人数</td>
+                            </tr>
+                            <tr>
+                                <th>支付方式</th>
+                                <td th:text="${order.payTypeText}">支付</td>
+                                <th>支付时间</th>
+                                <td th:text="${order.payTime != null
+                                              ? #temporals.format(order.payTime, 'yyyy-MM-dd HH:mm:ss') : '—'}">时间</td>
+                            </tr>
+                            <tr th:if="${order.remark != null and order.remark != ''}">
+                                <th>订单备注</th>
+                                <td colspan="3" th:text="${order.remark}">备注</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 房源信息 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">房源信息</div>
+                    </div>
+                    <div class="card-body" style="display:flex;gap:16px">
+                        <img th:src="${order.houseCover}" th:alt="${order.houseTitle}"
+                             style="width:180px;height:126px;object-fit:cover;border-radius:10px">
+                        <div style="flex:1">
+                            <a th:href="@{/admin/house/view/{id}(id=${order.houseId})}"
+                               style="font-size:16px;font-weight:600" th:text="${order.houseTitle}">房源</a>
+                            <div style="color:#6b7280;font-size:13px;line-height:2;margin-top:8px">
+                                <div th:text="'城市：' + ${order.houseCity}">城市</div>
+                                <div th:text="'地址：' + ${order.houseAddress}">地址</div>
+                                <div th:text="'每晚单价：¥' + ${order.unitPrice}">单价</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧操作区 -->
+            <div>
+                <div class="card" style="margin-bottom:18px">
+                    <div class="card-header">
+                        <div class="card-title">订单金额</div>
+                    </div>
+                    <div class="card-body">
+                        <div style="display:flex;justify-content:space-between;padding:8px 0;color:#4b5563">
+                            <span th:text="'¥' + ${order.unitPrice} + ' × ' + ${order.nights} + ' 晚'">房费</span>
+                            <span th:text="'¥' + ${order.totalAmount}">金额</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:14px 0 0;
+                                    border-top:1px solid #e5e7eb;margin-top:8px">
+                            <span style="font-weight:600">订单总额</span>
+                            <span style="font-size:22px;font-weight:700;color:#dc2626"
+                                  th:text="'¥' + ${order.totalAmount}">¥0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">可执行操作</div>
+                    </div>
+                    <div class="card-body" style="display:flex;flex-direction:column;gap:9px">
+                        <button th:if="${order.status == 1}" type="button" class="btn"
+                                data-url="/admin/order/checkin"
+                                th:data-id="${order.id}" 
+                                data-confirm="确认该订单的住客已到店办理入住？">办理入住</button>
+
+                        <button th:if="${order.status == 2}" type="button" class="btn"
+                                data-url="/admin/order/finish"
+                                th:data-id="${order.id}" 
+                                data-confirm="确认将该订单标记为已完成？">完成订单</button>
+
+                        <button th:if="${order.status == 0 or order.status == 1}" type="button"
+                                class="btn btn-danger"
+                                data-url="/admin/order/cancel"
+                                th:data-id="${order.id}" 
+                                data-confirm="取消后已支付的款项将退回住客余额，确定取消吗？"
+                                data-confirm-text="确定取消">取消订单</button>
+
+                        <div th:if="${order.status == 3 or order.status == 4}"
+                             style="color:#9ca3af;font-size:13px;text-align:center;padding:10px 0">
+                            该订单已结束，无可执行操作
+                        </div>
+
+                        <a href="/admin/order/list" class="btn btn-ghost">返回订单列表</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+
+</body>
+</html>

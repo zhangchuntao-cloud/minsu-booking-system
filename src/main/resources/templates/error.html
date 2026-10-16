@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('出错了')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('')}"></header>
+
+<!--
+  容器级错误页
+  当请求在进入 Controller 之前就被拒绝（如地址不存在、请求方式不匹配），
+  或者异常处理链路本身出错时，由 Spring Boot 的默认错误处理转发到本页。
+-->
+<main class="page-main">
+    <div class="container" style="max-width:620px">
+        <div class="card">
+            <div class="card-body" style="text-align:center;padding:52px 36px">
+                <div style="font-size:56px;font-weight:700;color:#0f766e;line-height:1"
+                     th:text="${status != null} ? ${status} : '出错'">500</div>
+                <h1 style="font-size:21px;margin:16px 0 12px">页面暂时无法访问</h1>
+                <p style="color:#6b7280;line-height:1.9;margin-bottom:26px"
+                   th:text="${error != null} ? ${error} : '请稍后重试，或返回首页继续浏览'">
+                    请稍后重试
+                </p>
+                <div style="display:flex;gap:12px;justify-content:center">
+                    <a href="/index" class="btn">回到首页</a>
+                    <a href="/house/list" class="btn btn-outline">去找房源</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>

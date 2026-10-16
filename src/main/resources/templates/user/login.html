@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('登录')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('')}"></header>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <h1 class="auth-title">欢迎回来</h1>
+        <p class="auth-subtitle">登录后即可预订房源、管理订单</p>
+
+        <div class="alert alert-error" th:if="${error != null}">
+            <span th:text="${error}">错误信息</span>
+        </div>
+        <div class="alert alert-success" th:if="${success != null}">
+            <span th:text="${success}">成功信息</span>
+        </div>
+
+        <form action="/login" method="post" id="loginForm">
+            <input type="hidden" name="redirect" th:value="${redirect}">
+
+            <div class="form-group">
+                <label class="form-label">登录账号</label>
+                <input type="text" name="username" class="form-control"
+                       th:value="${username}" placeholder="请输入登录账号"
+                       data-rule="required" data-label="登录账号" autofocus>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">登录密码</label>
+                <input type="password" name="password" class="form-control"
+                       placeholder="请输入登录密码"
+                       data-rule="required" data-label="登录密码">
+            </div>
+
+            <button type="submit" class="btn btn-lg btn-block">登 录</button>
+        </form>
+
+        <div class="auth-footer">
+            还没有账号？<a href="/register">立即注册</a>
+        </div>
+
+        <!-- 演示账号，方便评阅时快速体验不同角色的功能 -->
+        <div class="demo-accounts">
+            <b>演示账号（密码均为 123456）</b><br>
+            管理员：<b>admin</b> — 可审核房源、管理用户与查看统计<br>
+            房　东：<b>host01</b> — 可发布房源、处理订单、回复评价<br>
+            会　员：<b>user01</b> — 可预订房源、支付、评价、收藏
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script>
+    /* 登录表单提交前先做前端校验，减少无效请求 */
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        if (!Minsu.validateForm(this)) {
+            e.preventDefault();
+        }
+    });
+</script>
+
+</body>
+</html>

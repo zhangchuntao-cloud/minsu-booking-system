@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin :: head('编辑房源')}"></head>
+<body class="admin-body">
+
+<aside th:replace="~{fragments/admin :: sidebar('house')}"></aside>
+
+<div class="admin-main">
+    <div th:replace="~{fragments/admin :: topbar('编辑房源')}"></div>
+
+    <div class="admin-content">
+
+        <div class="breadcrumb">
+            <a href="/admin/index">工作台</a> /
+            <a href="/admin/house/list">房源管理</a> /
+            <span th:text="${house.id == null} ? '发布房源' : '编辑房源'">编辑房源</span>
+        </div>
+
+        <div class="alert alert-error" th:if="${error != null}">
+            <span th:text="${error}">错误信息</span>
+        </div>
+        <div class="alert alert-info" th:if="${house.id == null}">
+            新发布的房源将进入「待审核」状态，管理员审核通过后才会在前台展示
+        </div>
+
+        <form action="/admin/house/save" method="post" id="houseForm">
+            <input type="hidden" name="id" th:value="${house.id}">
+
+            <!-- 基本信息 -->
+            <div class="form-section">
+                <div class="form-section-title">基本信息</div>
+
+                <div class="form-group">
+                    <label class="form-label">房源标题<span class="required">*</span></label>
+                    <input type="text" name="title" class="form-control"
+                           th:value="${house.title}" maxlength="60"
+                           placeholder="如：洱海无边泳池海景大床房"
+                           data-rule="required" data-label="房源标题">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">房源分类<span class="required">*</span></label>
+                        <select name="categoryId" class="form-control"
+                                data-rule="required" data-label="房源分类">
+                            <option value="">请选择分类</option>
+                            <option th:each="c : ${categories}" th:value="${c.id}"
+                                    th:text="${c.categoryName}"
+                                    th:selected="${house.categoryId != null and house.categoryId == c.id}">分类</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属房东<span class="required">*</span></label>
+                        <!-- 房东登录时归属固定为自己，此处只读展示 -->
+                        <input th:if="${loginUser.host}" type="text" class="form-control"
+                               th:value="${loginUser.realName}" disabled>
+                        <select th:unless="${loginUser.host}" name="hostIdInput" class="form-control"
+                                data-rule="required" data-label="所属房东">
+                            <option value="">请选择房东</option>
+                            <option th:each="u : ${hosts}" th:value="${u.id}"
+                                    th:text="${u.realName} + '（' + ${u.username} + '）'"
+                                    th:selected="${house.hostId != null and house.hostId == u.id}">房东</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">每晚价格（元）<span class="required">*</span></label>
+                    <input type="number" name="price" class="form-control" step="0.01" min="0.01"
+                           th:value="${house.price}" placeholder="如：688.00"
+                           data-rule="required|positive" data-label="价格">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">面积（㎡）<span class="required">*</span></label>
+                        <input type="number" name="area" class="form-control" min="1"
+                               th:value="${house.area}"
+                               data-rule="required|positive" data-label="面积">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">最大入住人数<span class="required">*</span></label>
+                        <input type="number" name="maxGuest" class="form-control" min="1" max="20"
+                               th:value="${house.maxGuest}"
+                               data-rule="required|positive" data-label="最大入住人数">
+                    </div>
+                </div>
+
+                <div class="form-row" style="grid-template-columns:repeat(4,1fr)">
+                    <div class="form-group">
+                        <label class="form-label">卧室</label>
+                        <input type="number" name="bedroom" class="form-control" min="0"
+                               th:value="${house.bedroom}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">客厅</label>
+                        <input type="number" name="livingRoom" class="form-control" min="0"
+                               th:value="${house.livingRoom}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">卫生间</label>
+                        <input type="number" name="bathroom" class="form-control" min="0"
+                               th:value="${house.bathroom}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">床位</label>
+                        <input type="number" name="bedCount" class="form-control" min="1"
+                               th:value="${house.bedCount}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 位置信息 -->
+            <div class="form-section">
+                <div class="form-section-title">位置信息</div>
+                <div class="form-row" style="grid-template-columns:repeat(3,1fr)">
+                    <div class="form-group">
+                        <label class="form-label">省份</label>
+                        <input type="text" name="province" class="form-control" th:value="${house.province}"
+                               placeholder="如：云南省">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">城市<span class="required">*</span></label>
+                        <input type="text" name="city" class="form-control" th:value="${house.city}"
+                               placeholder="如：大理市"
+                               data-rule="required" data-label="城市">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">区县</label>
+                        <input type="text" name="district" class="form-control" th:value="${house.district}"
+                               placeholder="如：大理镇">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">详细地址</label>
+                        <input type="text" name="address" class="form-control" th:value="${house.address}"
+                               placeholder="如：才村码头环海西路 128 号">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">楼层描述</label>
+                        <input type="text" name="floorDesc" class="form-control" th:value="${house.floorDesc}"
+                               placeholder="如：2层/共3层">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 房源描述 -->
+            <div class="form-section">
+                <div class="form-section-title">房源介绍</div>
+
+                <div class="form-group">
+                    <label class="form-label">配套设施</label>
+                    <input type="text" name="facilities" class="form-control" th:value="${house.facilities}"
+                           placeholder="多个设施用英文逗号分隔，如：无线网络,空调,热水器">
+                    <div class="form-hint">这些设施会以标签形式展示在房源详情页</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">房源描述</label>
+                    <textarea name="description" class="form-control" rows="6"
+                              th:text="${house.description}"
+                              placeholder="介绍房源的亮点、周边环境、交通方式等"></textarea>
+                </div>
+            </div>
+
+            <!-- 房源图片 -->
+            <div class="form-section">
+                <div class="form-section-title">房源图片</div>
+
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-zone-icon">📷</div>
+                    <div>点击选择图片，或将图片拖拽到此处上传</div>
+                    <div style="font-size:12px;margin-top:6px">
+                        支持 jpg / png / gif / webp，单张不超过 5MB
+                    </div>
+                </div>
+                <input type="file" id="uploadInput" accept="image/*" multiple style="display:none">
+
+                <div class="form-group" style="margin-top:16px">
+                    <label class="form-label">图片地址列表</label>
+                    <textarea name="imageUrls" id="imageUrls" class="form-control" rows="4"
+                              placeholder="每行一个图片地址"
+                              th:text="${imageUrlsText}"></textarea>
+                    <div class="form-hint">
+                        第一张图片会作为房源封面。上传成功后地址会自动追加到此处，也可手工粘贴图片链接。
+                    </div>
+                </div>
+
+                <div class="image-preview-list" id="imagePreview"></div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-lg"
+                        th:text="${house.id == null} ? '提交发布' : '保存修改'">保存</button>
+                <a href="/admin/house/list" class="btn btn-lg btn-outline">取消</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script>
+    document.getElementById('houseForm').addEventListener('submit', function (e) {
+        if (!Minsu.validateForm(this)) {
+            e.preventDefault();
+            return;
+        }
+        // 封面取图片列表的第一行，没有图片时给出提示但不阻断提交
+        var imageUrls = document.getElementById('imageUrls').value.trim();
+        if (!imageUrls) {
+            Minsu.toast('建议至少上传一张房源图片', 'info');
+        }
+    });
+</script>
+
+</body>
+</html>

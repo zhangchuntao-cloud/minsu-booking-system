@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.code.web_homework.mapper.SysLogMapper">
+
+    <resultMap id="BaseResultMap" type="SysLog">
+        <id     column="id"            property="id"/>
+        <result column="user_id"       property="userId"/>
+        <result column="username"      property="username"/>
+        <result column="operation"     property="operation"/>
+        <result column="method"        property="method"/>
+        <result column="params"        property="params"/>
+        <result column="ip"            property="ip"/>
+        <result column="cost_time"     property="costTime"/>
+        <result column="creation_date" property="creationDate"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="SysLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_log
+            (user_id, username, operation, method, params, ip, cost_time, creation_date)
+        VALUES
+            (#{userId}, #{username}, #{operation}, #{method}, #{params}, #{ip}, #{costTime}, NOW())
+    </insert>
+
+    <select id="selectByQuery" resultMap="BaseResultMap">
+        SELECT id, user_id, username, operation, method, params, ip, cost_time, creation_date
+        FROM sys_log
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (operation LIKE CONCAT('%', #{keyword}, '%')
+                     OR username LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY creation_date DESC, id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByQuery" resultType="long">
+        SELECT COUNT(1)
+        FROM sys_log
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (operation LIKE CONCAT('%', #{keyword}, '%')
+                     OR username LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="selectRecent" resultMap="BaseResultMap">
+        SELECT id, user_id, username, operation, method, params, ip, cost_time, creation_date
+        FROM sys_log
+        ORDER BY creation_date DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

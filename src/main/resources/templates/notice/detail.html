@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head(${notice.title})}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('notice')}"></header>
+
+<main class="page-main">
+    <div class="container" style="max-width:880px">
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> / <a href="/notice/list">平台公告</a> /
+            <span th:text="${notice.title}">公告</span>
+        </div>
+
+        <div class="card">
+            <div class="card-body" style="padding:36px 42px">
+                <h1 style="font-size:25px;font-weight:700;line-height:1.5;margin-bottom:14px"
+                    th:text="${notice.title}">公告标题</h1>
+
+                <div style="display:flex;gap:18px;color:#9ca3af;font-size:13px;
+                            padding-bottom:20px;border-bottom:1px solid #e5e7eb;margin-bottom:24px">
+                    <span class="badge" th:classappend="${notice.typeStyle}"
+                          th:text="${notice.typeText}">类型</span>
+                    <span th:text="'发布人：' + ${notice.publisherName}">发布人</span>
+                    <span th:text="${#temporals.format(notice.publishTime, 'yyyy-MM-dd HH:mm')}">时间</span>
+                    <span th:text="'浏览 ' + ${notice.viewCount}">浏览</span>
+                </div>
+
+                <div style="line-height:2.1;color:#374151;font-size:15px;white-space:pre-line"
+                     th:text="${notice.content}">公告内容</div>
+
+                <div style="margin-top:36px;padding-top:22px;border-top:1px solid #e5e7eb;
+                            display:flex;justify-content:space-between">
+                    <a href="/notice/list" class="btn btn-outline">← 返回公告列表</a>
+                    <a href="/house/list" class="btn">去看看房源</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 其它公告 -->
+        <div class="card" style="margin-top:20px">
+            <div class="card-header">
+                <div class="card-title">其它公告</div>
+            </div>
+            <div class="card-body" style="padding-top:6px">
+                <a th:each="n : ${notices}" th:href="@{/notice/detail/{id}(id=${n.id})}"
+                   class="notice-item" style="padding:13px 0">
+                    <div style="flex:1;min-width:0">
+                        <div class="notice-title" style="font-size:14px" th:text="${n.title}">标题</div>
+                        <div style="color:#9ca3af;font-size:12px;margin-top:3px"
+                             th:text="${#temporals.format(n.publishTime, 'yyyy-MM-dd')}">日期</div>
+                    </div>
+                    <span style="color:#0f766e;font-size:13px">查看 →</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>

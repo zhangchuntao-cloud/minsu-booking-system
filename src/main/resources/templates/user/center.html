@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('个人中心')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('')}"></header>
+
+<main class="page-main">
+    <div class="container">
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> / <span>个人中心</span>
+        </div>
+
+        <div class="center-layout">
+            <div th:replace="~{fragments/center :: menu('center')}"></div>
+
+            <div>
+                <!-- 账户信息卡片 -->
+                <div class="card">
+                    <div class="card-body" style="display:flex;align-items:center;gap:20px">
+                        <div class="nav-avatar"
+                             style="width:68px;height:68px;font-size:26px"
+                             th:text="${#strings.substring(user.realName, 0, 1)}">用</div>
+                        <div style="flex:1">
+                            <div style="font-size:20px;font-weight:700" th:text="${user.realName}">用户</div>
+                            <div style="color:#6b7280;font-size:13px;margin-top:4px">
+                                <span th:text="'@' + ${user.username}">@user</span>
+                                <span class="badge blue" style="margin-left:8px"
+                                      th:text="${user.roleText}">会员</span>
+                            </div>
+                            <div style="color:#6b7280;font-size:13px;margin-top:6px">
+                                <span th:text="'手机：' + ${user.maskPhone}">手机</span>
+                                <span style="margin-left:16px"
+                                      th:text="'注册于 ' + ${#temporals.format(user.creationDate, 'yyyy-MM-dd')}">注册时间</span>
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="color:#6b7280;font-size:13px">账户余额</div>
+                            <div style="font-size:26px;font-weight:700;color:#dc2626"
+                                 th:text="'¥' + ${user.balance}">¥0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据概览 -->
+                <div class="stat-row" style="margin-top:18px;grid-template-columns:repeat(3,1fr)">
+                    <a href="/order/my" class="stat-card">
+                        <div class="stat-icon blue">📋</div>
+                        <div>
+                            <div class="stat-value" th:text="${orderCount}">0</div>
+                            <div class="stat-label">我的订单</div>
+                        </div>
+                    </a>
+                    <a href="/user/favorite" class="stat-card">
+                        <div class="stat-icon orange">♥</div>
+                        <div>
+                            <div class="stat-value" th:text="${favoriteCount}">0</div>
+                            <div class="stat-label">收藏房源</div>
+                        </div>
+                    </a>
+                    <a href="/user/review" class="stat-card">
+                        <div class="stat-icon green">💬</div>
+                        <div>
+                            <div class="stat-value" th:text="${reviewCount}">0</div>
+                            <div class="stat-label">发表评价</div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- 快捷入口 -->
+                <div class="card" style="margin-top:18px">
+                    <div class="card-header">
+                        <div class="card-title">快捷操作</div>
+                    </div>
+                    <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap">
+                        <a href="/house/list" class="btn">去预订房源</a>
+                        <a href="/order/my?status=0" class="btn btn-outline">查看待支付订单</a>
+                        <a href="/user/profile" class="btn btn-outline">完善个人资料</a>
+                        <a href="/user/password" class="btn btn-outline">修改登录密码</a>
+                        <th:block th:if="${user.host}">
+                            <a href="/admin/house/edit" class="btn btn-accent">发布新房源</a>
+                        </th:block>
+                        <th:block th:if="${user.admin or user.host}">
+                            <a href="/admin/index" class="btn btn-accent">进入后台管理</a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('我的订单')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('')}"></header>
+
+<main class="page-main">
+    <div class="container">
+        <div class="breadcrumb" style="margin-bottom:18px">
+            <a href="/index">首页</a> / <a href="/user/center">个人中心</a> / <span>我的订单</span>
+        </div>
+
+        <div class="center-layout">
+            <div th:replace="~{fragments/center :: menu('order')}"></div>
+
+            <div>
+                <!-- 状态筛选标签 -->
+                <div class="card" style="margin-bottom:18px">
+                    <div class="card-body" style="padding:14px 20px;display:flex;gap:8px;flex-wrap:wrap">
+                        <a th:href="@{/order/my}" class="btn btn-sm"
+                           th:classappend="${query.status == null} ? '' : 'btn-outline'">全部订单</a>
+                        <a th:href="@{/order/my(status=0)}" class="btn btn-sm"
+                           th:classappend="${query.status != null and query.status == 0} ? '' : 'btn-outline'">
+                            待支付</a>
+                        <a th:href="@{/order/my(status=1)}" class="btn btn-sm"
+                           th:classappend="${query.status != null and query.status == 1} ? '' : 'btn-outline'">
+                            待入住</a>
+                        <a th:href="@{/order/my(status=2)}" class="btn btn-sm"
+                           th:classappend="${query.status != null and query.status == 2} ? '' : 'btn-outline'">
+                            已入住</a>
+                        <a th:href="@{/order/my(status=3)}" class="btn btn-sm"
+                           th:classappend="${query.status != null and query.status == 3} ? '' : 'btn-outline'">
+                            已完成</a>
+                        <a th:href="@{/order/my(status=4)}" class="btn btn-sm"
+                           th:classappend="${query.status != null and query.status == 4} ? '' : 'btn-outline'">
+                            已取消</a>
+                    </div>
+                </div>
+
+                <div class="empty" th:if="${page.list.size() == 0}">
+                    <div class="empty-icon">📋</div>
+                    <div class="empty-text">这里还没有订单</div>
+                    <a href="/house/list" class="btn">去预订房源</a>
+                </div>
+
+                <!-- 订单列表 -->
+                <div class="order-card" th:each="o : ${page.list}">
+                    <div class="order-head">
+                        <div>
+                            <span>订单号：</span>
+                            <a th:href="@{/order/detail/{no}(no=${o.orderNo})}"
+                               th:text="${o.orderNo}" style="color:#0f766e">MS2026...</a>
+                            <span style="margin-left:14px"
+                                  th:text="${#temporals.format(o.creationDate, 'yyyy-MM-dd HH:mm')}">时间</span>
+                        </div>
+                        <span class="badge" th:classappend="${o.statusStyle}"
+                              th:text="${o.statusText}">状态</span>
+                    </div>
+
+                    <div class="order-body">
+                        <a th:href="@{/house/detail/{id}(id=${o.houseId})}">
+                            <img class="order-thumb" th:src="${o.houseCover}" th:alt="${o.houseTitle}">
+                        </a>
+                        <div class="order-info">
+                            <a th:href="@{/house/detail/{id}(id=${o.houseId})}"
+                               class="order-title" th:text="${o.houseTitle}">房源标题</a>
+                            <div class="order-line">
+                                <span th:text="${o.houseCity} + ' · ' + ${o.houseAddress}">地址</span>
+                            </div>
+                            <div class="order-line">
+                                <span th:text="${#temporals.format(o.checkInDate, 'yyyy-MM-dd')}">入住</span>
+                                至
+                                <span th:text="${#temporals.format(o.checkOutDate, 'yyyy-MM-dd')}">退房</span>
+                                · <span th:text="${o.nights} + ' 晚'">1 晚</span>
+                                · <span th:text="${o.guestNum} + ' 人'">1 人</span>
+                            </div>
+                            <div class="order-line" th:if="${o.status == 1 or o.status == 2 or o.status == 3}">
+                                支付方式：<span th:text="${o.payTypeText}">支付方式</span>
+                            </div>
+                        </div>
+                        <div class="order-amount">
+                            <div style="font-size:12px;color:#6b7280">订单金额</div>
+                            <div style="font-size:20px;font-weight:700;color:#dc2626"
+                                 th:text="'¥' + ${o.totalAmount}">¥0</div>
+                            <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+                                <button th:if="${o.canPay}" type="button"
+                                        class="btn btn-sm" data-action="pay"
+                                        th:data-order-no="${o.orderNo}">立即支付</button>
+                                <button th:if="${o.canReview}" type="button"
+                                        class="btn btn-sm btn-accent" data-action="open-review"
+                                        th:data-order-id="${o.id}"
+                                        th:data-house-title="${o.houseTitle}">发表评价</button>
+                                <button th:if="${o.canCancel}" type="button"
+                                        class="btn btn-sm btn-outline" data-action="cancel"
+                                        th:data-order-no="${o.orderNo}">取消订单</button>
+                                <a th:href="@{/order/detail/{no}(no=${o.orderNo})}"
+                                   class="btn btn-sm btn-ghost">订单详情</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:replace="~{fragments/common :: pagination(${page})}"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ==================== 评价弹窗 ==================== -->
+<div class="modal-mask" id="reviewModal">
+    <div class="modal">
+        <div class="modal-head">
+            发表评价
+            <span class="modal-close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div style="color:#6b7280;font-size:13px;margin-bottom:16px" id="reviewHouseTitle"></div>
+
+            <div class="form-group">
+                <label class="form-label">总体评分<span class="required">*</span></label>
+                <div id="starPicker" style="font-size:30px;color:#d1d5db;cursor:pointer;letter-spacing:6px">
+                    <span data-score="1">★</span><span data-score="2">★</span><span data-score="3">★</span><span
+                        data-score="4">★</span><span data-score="5">★</span>
+                </div>
+                <div class="form-hint" id="scoreHint">点击星星进行评分</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">评价内容<span class="required">*</span></label>
+                <textarea id="reviewContent" class="form-control" rows="4" maxlength="500"
+                          placeholder="说说你的入住体验，帮助其他住客做参考"></textarea>
+                <div class="form-hint"><span id="contentLength">0</span> / 500</div>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn-outline modal-close">取消</button>
+            <button type="button" class="btn" id="reviewSubmit">提交评价</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 支付弹窗 ==================== -->
+<div class="modal-mask" id="payModal">
+    <div class="modal" style="max-width:440px">
+        <div class="modal-head">
+            选择支付方式
+            <span class="modal-close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div style="color:#6b7280;font-size:13px;margin-bottom:14px">
+                订单号：<span id="payOrderNo"></span>
+            </div>
+            <div id="payOptions" style="display:flex;flex-direction:column;gap:10px">
+                <label class="facility-item" style="cursor:pointer;display:flex;align-items:center;gap:10px">
+                    <input type="radio" name="payType" value="1"> 余额支付（当前余额 ¥<span
+                        th:text="${session.loginUser.balance}">0</span>）
+                </label>
+                <label class="facility-item" style="cursor:pointer;display:flex;align-items:center;gap:10px">
+                    <input type="radio" name="payType" value="2" checked> 支付宝
+                </label>
+                <label class="facility-item" style="cursor:pointer;display:flex;align-items:center;gap:10px">
+                    <input type="radio" name="payType" value="3"> 微信支付
+                </label>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn-outline modal-close">取消</button>
+            <button type="button" class="btn" id="payConfirm">确认支付</button>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+<script>
+    (function () {
+        'use strict';
+
+        var currentOrderNo = null;
+        var currentOrderId = null;
+        var currentScore = 0;
+
+        /* 本页未引入后台脚本，这里提供轻量的弹窗开关方法 */
+        function openModal(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.classList.add('show');
+            }
+        }
+
+        function closeModal(el) {
+            var mask = el.closest ? el.closest('.modal-mask') : null;
+            if (mask) {
+                mask.classList.remove('show');
+            }
+        }
+
+        /* 绑定所有关闭按钮与遮罩点击关闭 */
+        document.querySelectorAll('.modal-close').forEach(function (el) {
+            el.addEventListener('click', function () {
+                closeModal(el);
+            });
+        });
+        document.querySelectorAll('.modal-mask').forEach(function (mask) {
+            mask.addEventListener('click', function (e) {
+                if (e.target === mask) {
+                    mask.classList.remove('show');
+                }
+            });
+        });
+
+        /* ---------------- 支付流程 ---------------- */
+        document.querySelectorAll('[data-action="pay"]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                currentOrderNo = btn.dataset.orderNo;
+                document.getElementById('payOrderNo').textContent = currentOrderNo;
+                openModal('payModal');
+            });
+        });
+
+        document.getElementById('payConfirm').addEventListener('click', function () {
+            var payType = document.querySelector('input[name="payType"]:checked').value;
+            var btn = this;
+            btn.disabled = true;
+            Minsu.post('/order/pay', {orderNo: currentOrderNo, payType: payType})
+                .then(function (result) {
+                    Minsu.toast(result.msg, 'success');
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 900);
+                })
+                .catch(function () {
+                    btn.disabled = false;
+                });
+        });
+
+        /* ---------------- 取消订单 ---------------- */
+        document.querySelectorAll('[data-action="cancel"]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                Minsu.confirm('确定要取消该订单吗？已支付的订单将退款至账户余额。', function () {
+                    Minsu.post('/order/cancel', {orderNo: btn.dataset.orderNo})
+                        .then(function (result) {
+                            Minsu.toast(result.msg, 'success');
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 900);
+                        })
+                        .catch(function () {
+                        });
+                }, '确定取消');
+            });
+        });
+
+        /* ---------------- 评价流程 ---------------- */
+        document.querySelectorAll('[data-action="open-review"]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                currentOrderId = btn.dataset.orderId;
+                document.getElementById('reviewHouseTitle').textContent = btn.dataset.houseTitle;
+                currentScore = 0;
+                updateStars(0);
+                document.getElementById('reviewContent').value = '';
+                document.getElementById('contentLength').textContent = '0';
+                openModal('reviewModal');
+            });
+        });
+
+        document.querySelectorAll('#starPicker span').forEach(function (star) {
+            star.addEventListener('click', function () {
+                currentScore = parseInt(star.dataset.score, 10);
+                updateStars(currentScore);
+            });
+            star.addEventListener('mouseenter', function () {
+                updateStars(parseInt(star.dataset.score, 10));
+            });
+        });
+        document.getElementById('starPicker').addEventListener('mouseleave', function () {
+            updateStars(currentScore);
+        });
+
+        function updateStars(score) {
+            document.querySelectorAll('#starPicker span').forEach(function (star) {
+                var value = parseInt(star.dataset.score, 10);
+                star.style.color = value <= score ? '#f59e0b' : '#d1d5db';
+            });
+            var hint = document.getElementById('scoreHint');
+            var texts = ['点击星星进行评分', '很不满意', '不太满意', '一般', '满意', '非常满意'];
+            hint.textContent = texts[score] || texts[0];
+        }
+
+        document.getElementById('reviewContent').addEventListener('input', function () {
+            document.getElementById('contentLength').textContent = this.value.length;
+        });
+
+        document.getElementById('reviewSubmit').addEventListener('click', function () {
+            if (currentScore === 0) {
+                Minsu.toast('请先点击星星评分', 'error');
+                return;
+            }
+            var content = document.getElementById('reviewContent').value.trim();
+            if (content.length < 5) {
+                Minsu.toast('评价内容至少 5 个字', 'error');
+                return;
+            }
+            var btn = this;
+            btn.disabled = true;
+            Minsu.post('/review/add', {
+                orderId: currentOrderId,
+                score: currentScore,
+                content: content
+            }).then(function (result) {
+                Minsu.toast(result.msg, 'success');
+                setTimeout(function () {
+                    window.location.reload();
+                }, 900);
+            }).catch(function () {
+                btn.disabled = false;
+            });
+        });
+    })();
+</script>
+
+</body>
+</html>

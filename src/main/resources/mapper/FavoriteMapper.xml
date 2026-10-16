@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.code.web_homework.mapper.FavoriteMapper">
+
+    <resultMap id="BaseResultMap" type="Favorite">
+        <id     column="id"            property="id"/>
+        <result column="user_id"       property="userId"/>
+        <result column="house_id"      property="houseId"/>
+        <result column="creation_date" property="creationDate"/>
+        <!-- 关联查询带出的房源字段 -->
+        <result column="house_title"   property="houseTitle"/>
+        <result column="house_cover"   property="houseCover"/>
+        <result column="house_city"    property="houseCity"/>
+        <result column="house_price"   property="housePrice"/>
+        <result column="house_score"   property="houseScore"/>
+    </resultMap>
+
+    <!-- 收藏列表：关联房源表带出展示所需字段，避免前端二次请求 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT f.id, f.user_id, f.house_id, f.creation_date,
+               h.title     AS house_title,
+               h.cover_img AS house_cover,
+               h.city      AS house_city,
+               h.price     AS house_price,
+               h.score     AS house_score
+        FROM favorite f
+        INNER JOIN house h ON f.house_id = h.id
+        WHERE f.user_id = #{userId}
+        ORDER BY f.creation_date DESC
+    </select>
+
+    <select id="countByUserAndHouse" resultType="int">
+        SELECT COUNT(1)
+        FROM favorite
+        WHERE user_id = #{userId} AND house_id = #{houseId}
+    </select>
+
+    <insert id="insert" parameterType="Favorite" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO favorite (user_id, house_id, creation_date)
+        VALUES (#{userId}, #{houseId}, NOW())
+    </insert>
+
+    <delete id="deleteByUserAndHouse">
+        DELETE FROM favorite
+        WHERE user_id = #{userId} AND house_id = #{houseId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM favorite WHERE id = #{id}
+    </delete>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(1) FROM favorite
+    </select>
+
+</mapper>

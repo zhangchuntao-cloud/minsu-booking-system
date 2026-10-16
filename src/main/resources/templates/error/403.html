@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('无权访问')}"></head>
+<body>
+
+<header th:replace="~{fragments/common :: header('')}"></header>
+
+<main class="page-main">
+    <div class="container" style="max-width:620px">
+        <div class="card">
+            <div class="card-body" style="text-align:center;padding:56px 36px">
+                <div style="font-size:64px;font-weight:700;color:#0f766e;line-height:1">403</div>
+                <h1 style="font-size:21px;margin:16px 0 12px">抱歉，您没有访问该页面的权限</h1>
+                <p style="color:#6b7280;line-height:1.9;margin-bottom:26px" th:text="${message}">
+                    该功能仅对管理员与房东开放
+                </p>
+                <div style="display:flex;gap:12px;justify-content:center">
+                    <a href="/index" class="btn">回到首页</a>
+                    <a href="/user/center" class="btn btn-outline">个人中心</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+
+<div id="toast"></div>
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>
